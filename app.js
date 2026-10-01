@@ -39,3 +39,36 @@ app.use(function(err, req, res, next) {
 });
 
 module.exports = app;
+
+
+const mongoose = require('mongoose'); // 1. Importe o mongoose
+
+
+
+// 2. Defina a string de conexão local
+// O "tcgdeckbuilder" no final será o nome do seu banco de dados (ele é criado automaticamente)
+const mongoURI = 'mongodb://127.0.0.1:27017/tcgdeckbuilder';
+
+// 3. Inicie a conexão
+mongoose.connect(mongoURI)
+  .then(() => console.log('Conectado ao MongoDB com sucesso!'))
+  .catch((err) => console.error('Erro ao conectar ao MongoDB:', err));
+
+// ... resto do seu código (configuração de rotas, views, etc.)
+
+app.use(express.json());
+
+const Carta = require('./models/Carta'); // Importa o modelo
+
+// Rota para criar uma nova carta
+app.post('/cartas', async (req, res) => {
+  try {
+    // req.body contém os dados enviados (foto, nome, etc)
+    const novaCarta = new Carta(req.body); 
+    const cartaSalva = await novaCarta.save(); // Salva no MongoDB
+    
+    res.status(201).json(cartaSalva); // Retorna a carta criada com sucesso
+  } catch (erro) {
+    res.status(400).json({ erro: 'Erro ao criar carta', detalhes: erro.message });
+  }
+});
