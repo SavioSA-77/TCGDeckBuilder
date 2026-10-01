@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - <%= title %></title>
+    <link rel="stylesheet" href="/stylesheets/login.css">
+</head>
+<body>
+    <div class="header">
+        <div class="pokebola"></div>
+        <div class="title">TCG Deck Builder</div>
+    </div>
+
+    <form class="card" action="/login" method="POST">
+        <div class="input-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" placeholder='"voce@mail.com"' required>
+        </div>
+
+        <div class="input-group">
+            <label for="senha">Senha:</label>
+            <div class="password-container">
+                <input type="password" id="senha" name="senha" placeholder='"XYZ12345"' required>
+                <button type="button" id="btn-senha" class="toggle-password" aria-label="Mostrar senha">
+                    <img src="/images/olhoFechado.png" alt="">
+                </button>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-entrar">Entrar</button>
+        <div class="divider">ou</div>
+        <button type="button" class="btn btn-google">🌐 Login com Google</button>
+
+        <div class="footer">
+            Você não tem uma conta? <a href="/cadastro">Criar conta</a>
+        </div>
+    </form>
+
+    <script src="/javascripts/script.js"></script>
+</body>
+</html>

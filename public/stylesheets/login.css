@@ -1,0 +1,234 @@
+@font-face {
+    font-family: "Pokemon Solid";
+    src: url("../fonts/Pokemon%20Solid.ttf") format("truetype");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Pokemon Hollow";
+    src: url("../fonts/Pokemon%20Hollow.ttf") format("truetype");
+    font-display: swap;
+}
+
+body {
+    background-color: #B3D9F2;
+    background-image: url("../images/fundopokemon.jpeg");
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.pokebola {
+    width: 80px;
+    height: 80px;
+    flex: 0 0 80px;
+    background: radial-gradient(circle at center, white 5px, #333 6px, #333 8px, transparent 9px),
+                linear-gradient(to bottom, #EE1515 50%, white 50%);
+    border: 2px solid #333;
+    border-radius: 50%;
+    margin-right: 15px;
+}
+
+.title {
+    font-family: "Pokemon Solid", sans-serif;
+    font-size: 65px;
+    font-weight: bold;
+    color: #ffcb05;
+    -webkit-text-stroke: 8px #326bb3;
+    paint-order: stroke fill;
+    text-shadow: 3px 4px 0 #173b7a;
+}
+
+.card {
+    background: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    padding: 45px 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    width: min(700px, 100%);
+    min-height: 600px;
+    box-sizing: border-box;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+    font-size: 15px;
+}
+
+.input-group input {
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.input-group input:focus {
+    border-color: #2980b9;
+}
+
+.btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: opacity 0.2s;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.btn-entrar {
+    background-color: #1D3354;
+    color: white;
+}
+
+.btn-google {
+    background-color: white;
+    color: #333;
+    border: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.divider {
+    text-align: center;
+    margin: 25px 0;
+    color: #777;
+    font-size: 14px;
+    position: relative;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 42%;
+    height: 1px;
+    background-color: #ddd;
+}
+
+.divider::before {
+    left: 0;
+}
+
+.divider::after {
+    right: 0;
+}
+
+.footer {
+    margin-top: auto;
+    padding-top: 30px;
+    text-align: center;
+    font-size: 15px;
+    color: #555;
+}
+
+.footer a {
+    color: #2980b9;
+    text-decoration: none;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+.footer a:hover {
+    text-decoration: underline;
+}
+
+.password-container {
+    position: relative;
+    display: flex;
+    width: 100%;
+}
+
+.password-container input {
+    width: 100%;
+    box-sizing: border-box;
+    padding-right: 44px;
+}
+
+.toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    display: grid;
+    place-items: center;
+    z-index: 1;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    transform: translateY(-50%);
+}
+
+.toggle-password img {
+    display: block;
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+.toggle-password:hover {
+    opacity: 0.7;
+}
+
+@media (max-width: 560px) {
+    .header {
+        max-width: 100%;
+        gap: 10px;
+    }
+
+    .pokebola {
+        margin-right: 0;
+    }
+
+    .title {
+        font-size: 32px;
+    }
+}
+
+@media (max-width: 480px) {
+    .card {
+        padding: 32px 24px;
+    }
+
+    .title {
+        font-size: 26px;
+    }
+}
