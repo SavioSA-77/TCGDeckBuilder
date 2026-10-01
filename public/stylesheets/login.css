@@ -12,6 +12,11 @@
 
 body {
     background-color: #B3D9F2;
+    background-image: url("../images/fundopokemon.jpeg");
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
     flex-direction: column;
@@ -216,7 +221,6 @@ body {
     .title {
         font-size: 32px;
     }
-
 }
 
 @media (max-width: 480px) {

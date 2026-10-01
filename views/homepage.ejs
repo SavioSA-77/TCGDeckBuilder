@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/stylesheets/home.css">
+</head>
+<body class="home-page">
+    <main class="catalog" aria-label="Coleção de cartas">
+        <section class="catalog-grid">
+            <% cards.forEach(function(card) { %>
+                <article class="catalog-card">
+                    <div class="catalog-card__image">
+                        <% if (card.image) { %>
+                            <img src="<%= card.image %>" alt="<%= card.name || '' %>">
+                        <% } %>
+                    </div>
+                    <div class="catalog-card__name">
+                        <% if (card.name) { %><span><%= card.name %></span><% } %>
+                    </div>
+                </article>
+            <% }); %>
+        </section>
+    </main>
+
+    <footer class="home-footer">
+        <span>TCG Deck Builder</span>
+        <span>Criado em 30/09/2026</span>
+    </footer>
+</body>
+</html>
