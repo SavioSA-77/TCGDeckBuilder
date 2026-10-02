@@ -9,6 +9,38 @@ var usersRouter = require('./routes/users');
 
 var app = express();
 
+app.use(express.json());
+
+const Carta = require('./models/carta'); // Importa o modelo
+const Deck = require('./models/deck'); // Importa o modelo
+
+
+// Rota para criar uma nova carta
+app.post('/cartas', async (req, res) => {
+  try {
+    // req.body contém os dados enviados (foto, nome, etc)
+    const novaCarta = new Carta(req.body); 
+    const cartaSalva = await novaCarta.save(); // Salva no MongoDB
+    
+    res.status(201).json(cartaSalva); // Retorna a carta criada com sucesso
+  } catch (erro) {
+    res.status(400).json({ erro: 'Erro ao criar carta', detalhes: erro.message });
+  }
+});
+
+// Rota para criar um novo deck
+app.post('/decks', async (req, res) => {
+  try {
+    const novoDeck = new Deck(req.body);
+    const deckSalvo = await novoDeck.save();
+    
+    res.status(201).json(deckSalvo);
+  } catch (erro) {
+    res.status(400).json({ erro: 'Erro ao criar deck', detalhes: erro.message });
+  }
+});
+
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -55,20 +87,3 @@ mongoose.connect(mongoURI)
   .catch((err) => console.error('Erro ao conectar ao MongoDB:', err));
 
 // ... resto do seu código (configuração de rotas, views, etc.)
-
-app.use(express.json());
-
-const Carta = require('./models/Carta'); // Importa o modelo
-
-// Rota para criar uma nova carta
-app.post('/cartas', async (req, res) => {
-  try {
-    // req.body contém os dados enviados (foto, nome, etc)
-    const novaCarta = new Carta(req.body); 
-    const cartaSalva = await novaCarta.save(); // Salva no MongoDB
-    
-    res.status(201).json(cartaSalva); // Retorna a carta criada com sucesso
-  } catch (erro) {
-    res.status(400).json({ erro: 'Erro ao criar carta', detalhes: erro.message });
-  }
-});
