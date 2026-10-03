@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seus Decks - PokéBuilder</title>
+    <!-- Substitui pelo nome correto do teu ficheiro CSS -->
+    <link rel="stylesheet" href="/stylesheets/home.css">
+</head>
+<body>
+    <!-- NAVBAR COMPLETA (EXATAMENTE IGUAL) -->
+    <header class="navbar">
+        <div class="logo">PokéBuilder</div>
+        <nav>
+            <a href="/home" class="<%= typeof paginaAtual !== 'undefined' && paginaAtual === 'home' ? 'ativo-amarelo' : '' %>">Decks</a>
+            <a href="/seus-decks" class="<%= typeof paginaAtual !== 'undefined' && paginaAtual === 'seus-decks' ? 'ativo-amarelo' : '' %>">Seus Decks</a>
+            <a href="/criar-deck" class="btn-novo">+ Novo Deck</a>
+            <a href="/logout">Sair</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- TÍTULO MINIMALISTA NO CANTO SUPERIOR ESQUERDO -->
+        <h2 class="titulo-minimalista">Seus times pokemon:</h2>
+
+        <!-- GRID DE CARDS (FORMATO IGUAL À HOME) -->
+        <div class="grid-decks">
+            <% if (typeof decks !== 'undefined' && decks.length > 0) { %>
+                <% decks.forEach(function(deck) { %>
+                    <div class="card-deck">
+                        <img src="<%= deck.imagemCapa || '/images/card-back.png' %>" alt="Capa de <%= deck.nome %>" class="imagem-deck">
+                        <div class="info-deck">
+                            <h3><%= deck.nome %></h3>
+                            <!-- Para a tela dos seus decks, em vez de mostrar o autor, podes ter botões de ação -->
+                            <div class="acoes-deck">
+                                <a href="/editar-deck/<%= deck.id %>" class="btn-editar">Editar</a>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <!-- MENSAGEM SE ELE AINDA NÃO TIVER CRIADO NENHUM DECK -->
+                <div class="sem-decks">
+                    <p>Ainda não criaste nenhum deck.</p>
+                    <a href="/criar-deck" class="btn-novo-deck">Criar o meu primeiro deck</a>
+                </div>
+            <% } %>
+        </div>
+    </main>
+</body>
+</html>
