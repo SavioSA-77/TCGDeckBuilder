@@ -1,17 +1,105 @@
+/* =========================================
+   1. IMPORTAÇÃO DE FONTES
+   ========================================= */
+@font-face {
+    font-family: "Pokemon Solid";
+    src: url("../fonts/Pokemon%20Solid.ttf") format("truetype");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Pokemon Hollow";
+    src: url("../fonts/Pokemon%20Hollow.ttf") format("truetype");
+    font-display: swap;
+}
+
+/* =========================================
+   2. CORPO DA PÁGINA (FUNDO CLARO)
+   ========================================= */
 .home-page {
     display: flex;
     flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
     min-height: 100vh;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    background: #fff;
+    background-color: #F4F6F8; /* Fundo branco mais fraco/gelo */
     color: #202523;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* =========================================
+   3. FAIXA SUPERIOR HEXAGONAL (HEADER)
+   ========================================= */
+.header-hex {
+    /* Fundo da grade hexagonal aplicado APENAS na faixa superior */
+    background-image: url("../images/fundopokemon.jpeg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 40px;
+    border-bottom: 4px solid #1D3354;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+/* --- LOGO MENOR --- */
+.header-logo-container-sm {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pokebola-sm {
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle at center, white 3px, #333 4px, #333 5px, transparent 6px),
+                linear-gradient(to bottom, #EE1515 50%, white 50%);
+    border: 2px solid #333;
+    border-radius: 50%;
+}
+
+.title-sm {
+    font-family: "Pokemon Solid", sans-serif;
+    font-size: 28px;
+    color: #ffcb05;
+    -webkit-text-stroke: 3px #326bb3;
+    paint-order: stroke fill;
+    text-shadow: 2px 2px 0 #173b7a;
+    margin: 0;
+}
+
+/* --- BOTÕES DA NAVBAR --- */
+.navbar-custom {
+    display: flex;
+    gap: 15px;
+}
+
+.nav-btn {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.2s;
+}
+
+.nav-btn:hover {
+    background-color: #ffcb05;
+    color: #1D3354;
+    border-color: #ffcb05;
+    transform: translateY(-2px);
+}
+
+/* =========================================
+   4. CONTEÚDO PRINCIPAL (GRADE DE CARTAS)
+   ========================================= */
 .catalog {
     width: min(1280px, 100%);
     flex: 1;
@@ -30,8 +118,16 @@
     min-width: 0;
     overflow: hidden;
     border: 1px solid #e5e8e6;
-    border-radius: 4px;
+    border-radius: 8px;
     background: #fff;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Sombra leve para destacar do fundo cinza */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Efeito ao passar o mouse no card */
+.catalog-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
 }
 
 .catalog-card__image {
@@ -57,19 +153,34 @@
     font-weight: 600;
 }
 
+/* =========================================
+   5. RODAPÉ
+   ========================================= */
 .home-footer {
     display: flex;
     justify-content: space-between;
     gap: 16px;
     padding: 18px 32px;
     border-top: 1px solid #e8ebe9;
+    background-color: #ffffff;
     color: #5f6863;
     font-size: 13px;
 }
 
+/* =========================================
+   6. RESPONSIVIDADE (TELAS MENORES)
+   ========================================= */
 @media (max-width: 900px) {
     .catalog-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .header-hex {
+        flex-direction: column;
+        gap: 20px;
+        padding: 20px;
     }
 }
 
@@ -91,5 +202,8 @@
     .home-footer {
         padding: 16px;
         font-size: 12px;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
     }
 }
