@@ -15,7 +15,7 @@ const Carta = require('./models/carta'); // Importa o modelo
 const Deck = require('./models/deck'); // Importa o modelo
 
 
-// Rota para criar uma nova carta
+// Rota para criar uma nova carta'
 app.post('/cartas', async (req, res) => {
   try {
     // req.body contém os dados enviados (foto, nome, etc)

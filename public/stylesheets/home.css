@@ -97,6 +97,35 @@
     transform: translateY(-2px);
 }
 
+.sort-favoritos-btn {
+    background-color: #123b6d;
+    color: #ffffff;
+    border-color: #123b6d;
+    box-shadow: none;
+}
+
+.sort-favoritos-btn:hover {
+    background-color: #123b6d;
+    color: #ffffff;
+    border-color: #123b6d;
+    transform: none;
+}
+
+.sort-favoritos-btn.ativo,
+.sort-favoritos-btn[aria-pressed="true"] {
+    background-color: transparent;
+    color: #ffcb05;
+    border-color: #ffcb05;
+}
+
+.sort-favoritos-btn.ativo:hover,
+.sort-favoritos-btn[aria-pressed="true"]:hover {
+    background-color: transparent;
+    color: #ffcb05;
+    border-color: #ffcb05;
+    transform: none;
+}
+
 /* =========================================
    4. CONTEÚDO PRINCIPAL (GRADE DE CARTAS)
    ========================================= */
@@ -218,9 +247,10 @@
 /* Título minimalista em Seus Decks */
 .titulo-minimalista {
     font-family: 'Helvetica Neue', Arial, sans-serif; /* Fontes limpas e sem serifa */
-    font-size: 1.2rem;
+    font-size: 3rem;
     font-weight: 400; /* Deixa a fonte mais fina */
-    color: #4a4a4a; /* Um cinza escuro no lugar de preto puro para ser mais suave */
+    color: #000000; /* Preto puro para maior contraste */
     text-align: left;
-    margin: 30px 0 20px 5%; /* Espaçamento do topo e alinhado à esquerda acompanhando o grid */
+    margin: 30px 0 20px 0; /* Alinhado mais ao canto esquerdo */
+    padding-left: 0; /* Remove espaçamento extra para ficar mais à esquerda */
 }
