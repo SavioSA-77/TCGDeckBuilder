@@ -16,7 +16,7 @@ router.get('/homepage', function(req, res) {
 // Arrays temporários para não dar erro enquanto não conecta o banco de dados
 const decksSimulados = []; 
 const meusDecksSimulados = [
-  { id: '1', nome: 'Meu Deck Fogo', imagemCapa: '' }
+  { id: '1', nome: 'Meu Deck Psíquico', imagemCapa: '/images/olhoAberto.png' }
 ];
 
 // Rota da Home (Decks da comunidade) - CORRIGIDO PARA router.get
