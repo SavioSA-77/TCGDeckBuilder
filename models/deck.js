@@ -2,15 +2,14 @@ const mongoose = require('mongoose');
 
 const deckSchema = new mongoose.Schema({
   nome: { type: String, required: true },
-  
-  // Campo adicionado para os destaques do deck
+  autor: { type: String, default: 'Anônimo' }, // Adicionado para combinar com a sua view
   pokemons_principais: { type: [String], default: [] }, 
   
   cartas: [
     {
-      carta_id: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Carta',
+      // A GRANDE MUDANÇA: Agora salvamos apenas o ID em texto que vem da API
+      carta_id_api: { 
+        type: String, 
         required: true 
       },
       quantidade: { 
@@ -25,4 +24,4 @@ const deckSchema = new mongoose.Schema({
   timestamps: true 
 });
 
-module.exports = mongoose.model('Deck', deckSchema);
+module.exports = mongoose.model('Deck', deckSchema);  
