@@ -3,54 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comunidade - PokéBuilder</title>
-    <!-- O caminho correto para o CSS -->
+    <title>Metagame - PokéBuilder</title>
     <link rel="stylesheet" href="/stylesheets/home.css">
+    <style>
+        /* Transformar o card num link clicável mantendo o design */
+        .card-link { text-decoration: none; color: inherit; display: block; }
+    </style>
 </head>
 <body class="home-page">
     
-    <!-- NAVBAR ATUALIZADA COM AS CLASSES DO HOME.CSS -->
     <header class="header-hex">
         <div class="header-logo-container-sm">
             <div class="pokebola-sm"></div>
             <h1 class="title-sm">PokéBuilder</h1>
         </div>
         <nav class="navbar-custom">
-            <a href="/home" class="nav-btn <%= typeof paginaAtual !== 'undefined' && paginaAtual === 'home' ? 'ativo-amarelo' : '' %>">Decks</a>
-            <a href="/seus-decks" class="nav-btn <%= typeof paginaAtual !== 'undefined' && paginaAtual === 'seus-decks' ? 'ativo-amarelo' : '' %>">Seus Decks</a>
+            <a href="/home" class="nav-btn ativo-amarelo">Decks</a>
+            <a href="/seus-decks" class="nav-btn">Seus Decks</a>
             <a href="/criar-deck" class="nav-btn">+ Novo Deck</a>
+            <a href="/logout" class="nav-btn">Sair</a>
         </nav>
     </header>
 
     <main class="catalog">
-        <!-- ÁREA DE DESTAQUE / FILTROS DA COMUNIDADE -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <h2 class="titulo-minimalista" style="margin: 0;">Decks da Comunidade</h2>
-            <div class="filtros">
-                <button class="nav-btn sort-favoritos-btn" type="button" aria-pressed="false" style="cursor: pointer;">Ordenar por Favoritos ⭐</button>
-            </div>
+            <h2 class="titulo-minimalista" style="margin: 0;">Escolha um Pokémon</h2>
         </div>
 
-        <!-- GRID DE CARDS COM AS CLASSES DO HOME.CSS -->
         <div class="catalog-grid">
-            <% if (typeof decks !== 'undefined' && decks.length > 0) { %>
-                <% decks.forEach(function(deck) { %>
-                    <div class="catalog-card">
-                        <div class="catalog-card__image">
-                            <img src="<%= deck.imagemCapa || '/images/card-back.png' %>" alt="Capa de <%= deck.nome %>">
+            <% if (typeof pokemons !== 'undefined' && pokemons.length > 0) { %>
+                <% pokemons.forEach(function(pokemon) { %>
+                    <!-- Ao clicar, vai para a rota dos decks daquele pokemon -->
+                    <a href="/pokemon/<%= pokemon.id %>" class="card-link">
+                        <div class="catalog-card">
+                            <div class="catalog-card__image" style="background: transparent; padding: 10px;">
+                                <!-- Mostra a carta do Pokémon -->
+                               <img src="<%= pokemon.imagem %>" alt="<%= pokemon.nome %>" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); object-fit: cover; object-position: top;">
+                            </div>
+                            <div class="catalog-card__name" style="justify-content: center;">
+                                <span style="font-weight: bold; font-size: 18px;"><%= pokemon.nome %></span>
+                            </div>
                         </div>
-                        
-                        <!-- Bloco de informações adaptado para incluir Autor e Favoritos de forma elegante -->
-                        <div class="catalog-card__name" style="flex-direction: column; align-items: flex-start; justify-content: center; padding: 12px 16px;">
-                            <span style="font-weight: bold; font-size: 16px; margin-bottom: 4px;"><%= deck.nome %></span>
-                            <span style="font-size: 12px; color: #5f6863;">Criado por: <%= deck.autor || 'Anónimo' %></span>
-                            <span style="font-size: 12px; color: #5f6863; margin-top: 4px;">⭐ <%= deck.favoritos || 0 %> Favoritos</span>
-                        </div>
-                    </div>
+                    </a>
                 <% }); %>
             <% } else { %>
                 <div class="sem-decks" style="grid-column: span 4; text-align: center; padding: 40px;">
-                    <p>Nenhum deck encontrado na comunidade.</p>
+                    <p>Nenhum Pokémon encontrado. Adicione um deck no Compass!</p>
                 </div>
             <% } %>
         </div>
@@ -60,17 +58,5 @@
         <div>© 2024 PokéBuilder</div>
         <div>Construa o seu time perfeito</div>
     </footer>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const btn = document.querySelector('.sort-favoritos-btn');
-            if (!btn) return;
-
-            btn.addEventListener('click', function () {
-                const isActive = btn.classList.toggle('ativo');
-                btn.setAttribute('aria-pressed', String(isActive));
-            });
-        });
-    </script>
 </body>
 </html>
