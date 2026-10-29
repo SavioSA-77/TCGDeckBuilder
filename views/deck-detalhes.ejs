@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= deck.nome %> - PokéBuilder</title>
+    <link rel="stylesheet" href="/stylesheets/home.css">
+    <style>
+        .quantidade-badge {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background-color: #ffcb05;
+            color: #1D3354;
+            font-weight: bold;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #F4F6F8;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            font-size: 16px;
+        }
+        .carta-container {
+            position: relative;
+            background: transparent;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body class="home-page">
+    
+    <header class="header-hex">
+        <div class="header-logo-container-sm">
+            <div class="pokebola-sm"></div>
+            <h1 class="title-sm">PokéBuilder</h1>
+        </div>
+        <nav class="navbar-custom">
+            <a href="/home" class="nav-btn ativo-amarelo">Decks</a>
+            <a href="/seus-decks" class="nav-btn">Seus Decks</a>
+        </nav>
+    </header>
+
+    <main class="catalog">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2 class="titulo-minimalista" style="margin: 0;"><%= deck.nome %></h2>
+            <button onclick="history.back()" class="nav-btn" style="background-color: #e5e8e6; color: #333; border: 1px solid #ccc; cursor: pointer;">← Voltar aos Decks</button>
+        </div>
+
+        <div class="catalog-grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;">
+            <% if (deck.cartas && deck.cartas.length > 0) { %>
+                <% deck.cartas.forEach(function(carta) { %>
+                    <div class="catalog-card" style="box-shadow: none; border: none; background: transparent;">
+                        <div class="carta-container">
+                            <img src="<%= carta.imagem %>" alt="<%= carta.nome %>" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                            <!-- Badge com a quantidade da carta (ex: 4x, 3x) -->
+                            <div class="quantidade-badge"><%= carta.quantidade %>x</div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <p>Este deck ainda não tem cartas.</p>
+            <% } %>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decks de <%= pokemonDestaque %> - PokéBuilder</title>
+    <link rel="stylesheet" href="/stylesheets/home.css">
+    <style>.card-link { text-decoration: none; color: inherit; display: block; }</style>
+</head>
+<body class="home-page">
+    
+    <header class="header-hex">
+        <div class="header-logo-container-sm">
+            <div class="pokebola-sm"></div>
+            <h1 class="title-sm">PokéBuilder</h1>
+        </div>
+        <nav class="navbar-custom">
+            <a href="/home" class="nav-btn ativo-amarelo">Decks</a>
+            <a href="/seus-decks" class="nav-btn">Seus Decks</a>
+            <a href="/criar-deck" class="nav-btn">+ Novo Deck</a>
+            <a href="/logout" class="nav-btn">Sair</a>
+        </nav>
+    </header>
+
+    <main class="catalog">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2 class="titulo-minimalista" style="margin: 0;">Decks de <%= pokemonDestaque %></h2>
+            <a href="/home" class="nav-btn" style="background-color: #e5e8e6; color: #333; border: 1px solid #ccc;">← Voltar</a>
+        </div>
+
+        <div class="catalog-grid">
+            <% if (typeof decks !== 'undefined' && decks.length > 0) { %>
+                <% decks.forEach(function(deck) { %>
+                    <!-- Ao clicar no deck, vai para a lista final de cartas -->
+                    <a href="/deck/<%= deck.id %>" class="card-link">
+                        <div class="catalog-card">
+                            <div class="catalog-card__image" style="background: transparent; padding: 10px;">
+                                <!-- Capa do deck usando a foto da primeira carta -->
+                                <img src="<%= deck.imagemCapa %>" alt="Capa" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); object-fit: cover; object-position: top;">
+                            </div>
+                            <div class="catalog-card__name" style="flex-direction: column; align-items: flex-start; justify-content: center; padding: 12px 16px;">
+                                <span style="font-weight: bold; font-size: 16px; margin-bottom: 4px;"><%= deck.nome %></span>
+                                <span style="font-size: 12px; color: #5f6863;">Criado por: <%= deck.autor %></span>
+                            </div>
+                        </div>
+                    </a>
+                <% }); %>
+            <% } else { %>
+                <div class="sem-decks" style="grid-column: span 4; text-align: center; padding: 40px;">
+                    <p>Nenhum deck encontrado para este Pokémon.</p>
+                </div>
+            <% } %>
+        </div>
+    </main>
+</body>
+</html>
