@@ -31,11 +31,24 @@
             <% if (typeof decks !== 'undefined' && decks.length > 0) { %>
                 <% decks.forEach(function(deck) { %>
                     <div class="catalog-card">
-                        <div class="catalog-card__image">
-                            <img src="<%= deck.imagemCapa || '/images/card-back.png' %>" alt="Capa de <%= deck.nome %>">
-                        </div>
-                        <div class="catalog-card__name" style="justify-content: space-between;">
-                            <span><%= deck.nome %></span>
+                        <!-- Clique na imagem redireciona para a visualização das cartas -->
+                        <a href="/deck/<%= deck.id %>" style="text-decoration: none; color: inherit; display: block;">
+                            <div class="catalog-card__image deck-cover-container">
+                                <!-- Exibe as cartas dos Pokémons principais em leque -->
+                                <% if (typeof deck.imagensCapa !== 'undefined' && deck.imagensCapa.length > 0) { %>
+                                    <div class="deck-cover-list">
+                                        <% deck.imagensCapa.forEach(function(img, index) { %>
+                                            <img src="<%= img %>" alt="Pokémon Principal"
+                                                 class="deck-cover-image <%= deck.imagensCapa.length > 1 ? 'deck-cover-image-multiple' : '' %> <%= index > 0 ? 'deck-cover-image-overlap' : '' %>">
+                                        <% }); %>
+                                    </div>
+                                <% } else { %>
+                                    <img src="<%= deck.imagemCapa || 'https://tcg.pokemon.com/assets/img/global/tcg-card-back-2x.jpg' %>" alt="Capa de <%= deck.nome %>" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); object-fit: cover; object-position: top; width: 100%;">
+                                <% } %>
+                            </div>
+                        </a>
+                        <div class="catalog-card__name" style="justify-content: space-between; padding: 12px 16px;">
+                            <span style="font-weight: bold; font-size: 16px;"><%= deck.nome %></span>
                             <a href="/editar-deck/<%= deck.id %>" class="nav-btn" style="padding: 5px 10px; font-size: 12px;">Editar</a>
                         </div>
                     </div>

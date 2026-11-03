@@ -171,6 +171,40 @@
     object-fit: cover;
 }
 
+.deck-cover-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    background: transparent;
+}
+
+.deck-cover-list {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 100%;
+}
+
+.catalog-card__image .deck-cover-image {
+    flex: 0 0 100%;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    object-fit: unset;
+    box-shadow: -4px 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.catalog-card__image .deck-cover-image-multiple {
+    flex-basis: 60%;
+    width: 60%;
+}
+
+.catalog-card__image .deck-cover-image-overlap {
+    margin-left: -25%;
+}
+
 .catalog-card__name {
     min-height: 54px;
     display: flex;

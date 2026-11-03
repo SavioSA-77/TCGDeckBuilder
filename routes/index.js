@@ -6,36 +6,62 @@ router.get('/', function(req, res) { res.render('index', { title: 'TCG Deck Buil
 router.get('/homepage', (req, res) => res.redirect('/home'));
 
 // ==========================================
-// FUNÇÃO DE BUSCA POR NOME (Simples e Direta)
+// FUNÇÃO DE BUSCA CORRIGIDA (Fallback para Hífens)
 // ==========================================
-async function buscarCartaPorNome(nomeCarta) {
-    if (!nomeCarta) return null;
+async function buscarCartaPorNome(termo) {
+    if (!termo) return null;
     try {
-        const url = `https://api.tcgdex.net/v2/en/cards?name=${encodeURIComponent(nomeCarta)}`;
+        // 1. Tenta buscar por ID direto se tiver hífen (ex: sv06-130)
+        if (termo.includes('-')) {
+            try {
+                const resID = await fetch(`https://api.tcgdex.net/v2/en/cards/${termo.toLowerCase()}`);
+                if (resID.ok) {
+                    const dataID = await resID.json();
+                    if (dataID && dataID.image) return dataID;
+                }
+            } catch (e) {}
+            // Se falhar como ID (ex: "Chi-Yu"), NÃO cancela! Continua para a busca por nome abaixo.
+        }
+
+        // 2. Busca por Nome na API
+        const url = `https://api.tcgdex.net/v2/en/cards?name=${encodeURIComponent(termo)}`;
         const res = await fetch(url);
         
         if (res.ok) {
             const cartas = await res.json();
             if (Array.isArray(cartas) && cartas.length > 0) {
-                let cartaComImagem = null;
+                const termoLower = termo.toLowerCase().trim();
                 
-                // Filtros inteligentes para cartas que têm versões "ex" ou evoluções com nomes parecidos
-                const nomeLower = nomeCarta.toLowerCase();
-                if (nomeLower === 'munkidori') {
-                    // Procura a versão normal (ignora "ex")
-                    cartaComImagem = cartas.find(c => c.image && !c.name.toLowerCase().includes('ex'));
-                } else if (nomeLower === 'dunsparce') {
-                    // Procura o Dunsparce (ignora Dudunsparce)
-                    cartaComImagem = cartas.find(c => c.image && c.name.toLowerCase() === 'dunsparce');
+                let candidatas = cartas.filter(c => c && c.image);
+                if (candidatas.length === 0) return null;
+
+                // Filtros específicos para evitar ambiguidades
+                if (termoLower === 'munkidori') {
+                    candidatas = candidatas.filter(c => !c.name.toLowerCase().includes('ex'));
+                } else if (termoLower === 'dunsparce') {
+                    candidatas = candidatas.filter(c => c.name.toLowerCase() === 'dunsparce');
                 } else {
-                    cartaComImagem = cartas.find(c => c.image);
+                    const exatas = candidatas.filter(c => c.name.toLowerCase() === termoLower);
+                    if (exatas.length > 0) candidatas = exatas;
                 }
-                
-                if (cartaComImagem) return cartaComImagem;
+
+                if (candidatas.length === 0) return null;
+
+                // SELEÇÃO POR ERA: Prioriza Scarlet & Violet ('sv'), depois Sword & Shield ('swsh')
+                const svCard = candidatas.find(c => c.id && c.id.toLowerCase().startsWith('sv'));
+                if (svCard) return svCard;
+
+                const swshCard = candidatas.find(c => c.id && c.id.toLowerCase().startsWith('swsh'));
+                if (swshCard) return swshCard;
+
+                const smCard = candidatas.find(c => c.id && c.id.toLowerCase().startsWith('sm'));
+                if (smCard) return smCard;
+
+                return candidatas[0];
             }
         }
     } catch (e) {
-        console.error("Erro ao buscar carta:", nomeCarta);
+        console.error("Erro ao buscar carta:", termo);
     }
     return null;
 }
@@ -65,9 +91,7 @@ router.get('/home', async (req, res) => {
             });
         }
         res.render('homepage', { paginaAtual: 'home', pokemons: pokemonsMeta });
-    } catch (erro) { 
-        res.status(500).send('Erro ao carregar a página.'); 
-    }
+    } catch (erro) { res.status(500).send('Erro ao carregar a página.'); }
 });
 
 // ==========================================
@@ -83,13 +107,18 @@ router.get('/pokemon/:nome_pokemon', async (req, res) => {
 
         const decksFormatados = [];
         for (const deck of decksFiltrados) {
-            let imagemCapa = 'https://tcg.pokemon.com/assets/img/global/tcg-card-back-2x.jpg';
-            if (deck.cartas && deck.cartas.length > 0) {
-                const cartaApi = await buscarCartaPorNome(deck.cartas[0].carta_id_api);
-                if (cartaApi && cartaApi.image) imagemCapa = cartaApi.image + '/high.png';
+            let imagensCapa = [];
+            // Em vez da 1ª carta, procura as imagens de TODOS os pokémons principais
+            if (deck.pokemons_principais && deck.pokemons_principais.length > 0) {
+                for (const pkmn of deck.pokemons_principais) {
+                    const cartaApi = await buscarCartaPorNome(pkmn);
+                    if (cartaApi && cartaApi.image) imagensCapa.push(cartaApi.image + '/high.png');
+                }
             }
+            if (imagensCapa.length === 0) imagensCapa.push('https://tcg.pokemon.com/assets/img/global/tcg-card-back-2x.jpg');
+
             decksFormatados.push({
-                id: deck._id, nome: deck.nome, autor: deck.autor || 'Anônimo', favoritos: 0, imagemCapa: imagemCapa
+                id: deck._id, nome: deck.nome, autor: deck.autor || 'Anônimo', favoritos: 0, imagensCapa: imagensCapa
             });
         }
         const nomeBonito = pokemonSlug.replace(/-/g, ' ').toUpperCase();
@@ -99,6 +128,7 @@ router.get('/pokemon/:nome_pokemon', async (req, res) => {
 
 // ==========================================
 // PASSO 3: Detalhes do Deck
+// (Mantém-se igual ao que já tens)
 // ==========================================
 router.get('/deck/:id_deck', async (req, res) => {
     try {
@@ -130,12 +160,16 @@ router.get('/seus-decks', async (req, res) => {
         const meusDecks = await Deck.find({}).lean();
         const decksComCapa = [];
         for (const deck of meusDecks) {
-            let imagemCapa = 'https://tcg.pokemon.com/assets/img/global/tcg-card-back-2x.jpg';
-            if (deck.cartas && deck.cartas.length > 0) {
-                const cartaApi = await buscarCartaPorNome(deck.cartas[0].carta_id_api);
-                if (cartaApi && cartaApi.image) imagemCapa = cartaApi.image + '/high.png';
+            let imagensCapa = [];
+            if (deck.pokemons_principais && deck.pokemons_principais.length > 0) {
+                for (const pkmn of deck.pokemons_principais) {
+                    const cartaApi = await buscarCartaPorNome(pkmn);
+                    if (cartaApi && cartaApi.image) imagensCapa.push(cartaApi.image + '/high.png');
+                }
             }
-            decksComCapa.push({ id: deck._id, nome: deck.nome, imagemCapa: imagemCapa });
+            if (imagensCapa.length === 0) imagensCapa.push('https://tcg.pokemon.com/assets/img/global/tcg-card-back-2x.jpg');
+
+            decksComCapa.push({ id: deck._id, nome: deck.nome, imagensCapa: imagensCapa });
         }
         res.render('seus-decks', { paginaAtual: 'seus-decks', decks: decksComCapa });
     } catch (erro) { res.status(500).send('Erro ao carregar os teus decks.'); }

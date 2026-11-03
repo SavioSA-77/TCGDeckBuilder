@@ -34,9 +34,18 @@
                     <!-- Ao clicar no deck, vai para a lista final de cartas -->
                     <a href="/deck/<%= deck.id %>" class="card-link">
                         <div class="catalog-card">
-                            <div class="catalog-card__image" style="background: transparent; padding: 10px;">
-                                <!-- Capa do deck usando a foto da primeira carta -->
-                                <img src="<%= deck.imagemCapa %>" alt="Capa" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); object-fit: cover; object-position: top;">
+                            <div class="catalog-card__image deck-cover-container">
+                                <!-- Exibe as cartas dos Pokémons principais em leque -->
+                                <% if (typeof deck.imagensCapa !== 'undefined' && deck.imagensCapa.length > 0) { %>
+                                    <div class="deck-cover-list">
+                                        <% deck.imagensCapa.forEach(function(img, index) { %>
+                                            <img src="<%= img %>" alt="Pokémon Principal"
+                                                 class="deck-cover-image <%= deck.imagensCapa.length > 1 ? 'deck-cover-image-multiple' : '' %> <%= index > 0 ? 'deck-cover-image-overlap' : '' %>">
+                                        <% }); %>
+                                    </div>
+                                <% } else { %>
+                                    <img src="<%= deck.imagemCapa || 'https://tcg.pokemon.com/assets/img/global/tcg-card-back-2x.jpg' %>" alt="Capa" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); object-fit: cover; object-position: top; width: 100%;">
+                                <% } %>
                             </div>
                             <div class="catalog-card__name" style="flex-direction: column; align-items: flex-start; justify-content: center; padding: 12px 16px;">
                                 <span style="font-weight: bold; font-size: 16px; margin-bottom: 4px;"><%= deck.nome %></span>
