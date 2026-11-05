@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - PokéBuilder</title>
+    <!-- Substitui pelo caminho correto do teu CSS que tem o fundo hexagonal -->
+    <link rel="stylesheet" href="/stylesheets/home.css">
+    <style>
+        .auth-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        .auth-logo { display: flex; align-items: center; margin-bottom: 20px; }
+        .auth-logo img { width: 40px; margin-right: 15px; }
+        .auth-logo h1 { color: #fccf00; font-family: 'Pokemon Solid', sans-serif; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); font-size: 32px; -webkit-text-stroke: 1px #2a52be; }
+        .auth-box { background: white; padding: 40px; border-radius: 8px; width: 100%; max-width: 450px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+        .auth-form-group { margin-bottom: 15px; }
+        .auth-form-group label { display: block; font-size: 14px; color: #333; margin-bottom: 5px; font-weight: bold; }
+        .auth-form-group input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        .auth-btn { width: 100%; padding: 12px; background-color: #1f3659; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
+        .auth-btn:hover { background-color: #152642; }
+        .auth-links { text-align: center; margin-top: 20px; font-size: 14px; color: #666; }
+        .auth-links a { color: #0066cc; text-decoration: none; font-weight: bold; }
+        .auth-error { background-color: #ffebee; color: #c62828; padding: 10px; border-radius: 4px; margin-bottom: 15px; text-align: center; font-size: 14px; font-weight: bold; }
+    </style>
+</head>
+<body class="home-page" style="background-image: url('/images/hex-bg.png'); background-size: cover;">
+
+    <div class="auth-container">
+        <div class="auth-logo">
+            <!-- Usa a mesma imagem da pokebola que tens na Navbar -->
+            <img src="/images/pokebola.png" alt="Pokébola">
+            <h1>TCG Deck Builder</h1>
+        </div>
+
+        <div class="auth-box">
+            <% if (typeof erro !== 'undefined' && erro) { %>
+                <div class="auth-error"><%= erro %></div>
+            <% } %>
+
+            <form action="/cadastro" method="POST">
+                <div class="auth-form-group">
+                    <label>Nome de Usuário:</label>
+                    <input type="text" name="username" placeholder="Treinador123" required>
+                </div>
+                
+                <div class="auth-form-group">
+                    <label>Email:</label>
+                    <input type="email" name="email" placeholder="voce@mail.com" required>
+                </div>
+
+                <div class="auth-form-group">
+                    <label>Idade:</label>
+                    <input type="number" name="idade" placeholder="Ex: 18" min="1" required>
+                </div>
+
+                <div class="auth-form-group">
+                    <label>Senha:</label>
+                    <input type="password" name="senha" placeholder="Crie uma senha forte" required>
+                </div>
+
+                <div class="auth-form-group">
+                    <label>Confirmar Senha:</label>
+                    <input type="password" name="confirmarSenha" placeholder="Repita a senha" required>
+                </div>
+
+                <button type="submit" class="auth-btn">Cadastrar</button>
+            </form>
+
+            <div class="auth-links">
+                Já tem uma conta? <a href="/login">Entrar</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
