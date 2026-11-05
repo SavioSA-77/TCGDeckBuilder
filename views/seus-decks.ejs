@@ -4,12 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seus Decks - PokéBuilder</title>
-    <!-- O caminho corrigido sem o /public -->
     <link rel="stylesheet" href="/stylesheets/home.css">
 </head>
 <body class="home-page">
-    
-    <!-- NAVBAR ATUALIZADA COM AS CLASSES DO HOME.CSS -->
+
     <header class="header-hex">
         <div class="header-logo-container-sm">
             <div class="pokebola-sm"></div>
@@ -23,19 +21,28 @@
     </header>
 
     <main class="catalog">
-        <!-- TÍTULO MINIMALISTA -->
         <h2 class="titulo-minimalista">Seus times pokemon:</h2>
 
-        <!-- GRID DE CARDS COM AS CLASSES DO HOME.CSS -->
         <div class="catalog-grid">
             <% if (typeof decks !== 'undefined' && decks.length > 0) { %>
                 <% decks.forEach(function(deck) { %>
                     <div class="catalog-card">
-                        <div class="catalog-card__image">
-                            <img src="<%= deck.imagemCapa || '/images/card-back.png' %>" alt="Capa de <%= deck.nome %>">
-                        </div>
-                        <div class="catalog-card__name" style="justify-content: space-between;">
-                            <span><%= deck.nome %></span>
+                        <a href="/deck/<%= deck.id %>" style="text-decoration: none; color: inherit; display: block;">
+                            <div class="catalog-card__image deck-cover-container">
+                                <% if (typeof deck.imagensCapa !== 'undefined' && deck.imagensCapa.length > 0) { %>
+                                    <div class="deck-cover-list">
+                                        <% deck.imagensCapa.forEach(function(img, index) { %>
+                                            <img src="<%= img %>" alt="Pokémon Principal"
+                                                 class="deck-cover-image <%= deck.imagensCapa.length > 1 ? 'deck-cover-image-multiple' : '' %> <%= index > 0 ? 'deck-cover-image-overlap' : '' %>">
+                                        <% }); %>
+                                    </div>
+                                <% } else { %>
+                                    <img src="<%= deck.imagemCapa || 'https://tcg.pokemon.com/assets/img/global/tcg-card-back-2x.jpg' %>" alt="Capa de <%= deck.nome %>" class="deck-cover-image-fallback">
+                                <% } %>
+                            </div>
+                        </a>
+                        <div class="catalog-card__name" style="justify-content: space-between; padding: 12px 16px;">
+                            <span style="font-weight: bold; font-size: 16px;"><%= deck.nome %></span>
                             <a href="/editar-deck/<%= deck.id %>" class="nav-btn" style="padding: 5px 10px; font-size: 12px;">Editar</a>
                         </div>
                     </div>
