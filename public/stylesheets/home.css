@@ -176,7 +176,14 @@
     align-items: center;
     justify-content: center;
     padding: 10px;
-    background: transparent;
+    width: 100%;
+    height: 280px;
+    box-sizing: border-box;
+    background-image: url("../images/pokebola-bg.png");
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px 8px 0 0;
+    overflow: hidden;
 }
 
 .deck-cover-list {
@@ -185,24 +192,30 @@
     justify-content: center;
     position: relative;
     width: 100%;
+    height: 100%;
 }
 
-.catalog-card__image .deck-cover-image {
-    flex: 0 0 100%;
-    width: 100%;
-    height: auto;
+.catalog-card__image .deck-cover-image,
+.catalog-card__image .deck-cover-image-fallback {
+    flex: 0 0 auto;
+    width: auto;
+    height: 95%;
     border-radius: 8px;
-    object-fit: unset;
-    box-shadow: -4px 2px 8px rgba(0, 0, 0, 0.4);
+    object-fit: contain;
+    box-shadow: -4px 4px 10px rgba(0, 0, 0, 0.6);
+    transition: transform 0.2s;
 }
 
 .catalog-card__image .deck-cover-image-multiple {
-    flex-basis: 60%;
-    width: 60%;
+    height: 85%;
 }
 
 .catalog-card__image .deck-cover-image-overlap {
-    margin-left: -25%;
+    margin-left: -40px;
+}
+
+.catalog-card__image .deck-cover-image-fallback {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
 }
 
 .catalog-card__name {

@@ -4,12 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seus Decks - PokéBuilder</title>
-    <!-- O caminho corrigido sem o /public -->
     <link rel="stylesheet" href="/stylesheets/home.css">
 </head>
 <body class="home-page">
-    
-    <!-- NAVBAR ATUALIZADA COM AS CLASSES DO HOME.CSS -->
+
     <header class="header-hex">
         <div class="header-logo-container-sm">
             <div class="pokebola-sm"></div>
@@ -23,18 +21,14 @@
     </header>
 
     <main class="catalog">
-        <!-- TÍTULO MINIMALISTA -->
         <h2 class="titulo-minimalista">Seus times pokemon:</h2>
 
-        <!-- GRID DE CARDS COM AS CLASSES DO HOME.CSS -->
         <div class="catalog-grid">
             <% if (typeof decks !== 'undefined' && decks.length > 0) { %>
                 <% decks.forEach(function(deck) { %>
                     <div class="catalog-card">
-                        <!-- Clique na imagem redireciona para a visualização das cartas -->
                         <a href="/deck/<%= deck.id %>" style="text-decoration: none; color: inherit; display: block;">
                             <div class="catalog-card__image deck-cover-container">
-                                <!-- Exibe as cartas dos Pokémons principais em leque -->
                                 <% if (typeof deck.imagensCapa !== 'undefined' && deck.imagensCapa.length > 0) { %>
                                     <div class="deck-cover-list">
                                         <% deck.imagensCapa.forEach(function(img, index) { %>
@@ -43,7 +37,7 @@
                                         <% }); %>
                                     </div>
                                 <% } else { %>
-                                    <img src="<%= deck.imagemCapa || 'https://tcg.pokemon.com/assets/img/global/tcg-card-back-2x.jpg' %>" alt="Capa de <%= deck.nome %>" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); object-fit: cover; object-position: top; width: 100%;">
+                                    <img src="<%= deck.imagemCapa || 'https://tcg.pokemon.com/assets/img/global/tcg-card-back-2x.jpg' %>" alt="Capa de <%= deck.nome %>" class="deck-cover-image-fallback">
                                 <% } %>
                             </div>
                         </a>

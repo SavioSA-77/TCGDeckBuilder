@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
@@ -8,7 +8,7 @@
     <style>.card-link { text-decoration: none; color: inherit; display: block; }</style>
 </head>
 <body class="home-page">
-    
+
     <header class="header-hex">
         <div class="header-logo-container-sm">
             <div class="pokebola-sm"></div>
@@ -31,11 +31,9 @@
         <div class="catalog-grid">
             <% if (typeof decks !== 'undefined' && decks.length > 0) { %>
                 <% decks.forEach(function(deck) { %>
-                    <!-- Ao clicar no deck, vai para a lista final de cartas -->
                     <a href="/deck/<%= deck.id %>" class="card-link">
                         <div class="catalog-card">
                             <div class="catalog-card__image deck-cover-container">
-                                <!-- Exibe as cartas dos Pokémons principais em leque -->
                                 <% if (typeof deck.imagensCapa !== 'undefined' && deck.imagensCapa.length > 0) { %>
                                     <div class="deck-cover-list">
                                         <% deck.imagensCapa.forEach(function(img, index) { %>
@@ -44,7 +42,7 @@
                                         <% }); %>
                                     </div>
                                 <% } else { %>
-                                    <img src="<%= deck.imagemCapa || 'https://tcg.pokemon.com/assets/img/global/tcg-card-back-2x.jpg' %>" alt="Capa" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); object-fit: cover; object-position: top; width: 100%;">
+                                    <img src="<%= deck.imagemCapa || 'https://tcg.pokemon.com/assets/img/global/tcg-card-back-2x.jpg' %>" alt="Capa" class="deck-cover-image-fallback">
                                 <% } %>
                             </div>
                             <div class="catalog-card__name" style="flex-direction: column; align-items: flex-start; justify-content: center; padding: 12px 16px;">
