@@ -1,8 +1,12 @@
 var express = require('express');
 var router = express.Router();
 const Deck = require('../models/deck');
+const User = require('../models/users');
+const bcrypt = require('bcrypt');
 
-router.get('/', function(req, res) { res.render('index', { title: 'TCG Deck Builder' }); });
+router.get('/', function(req, res) { 
+    res.render('index', { title: 'TCG Deck Builder', erro: null }); 
+});
 router.get('/homepage', (req, res) => res.redirect('/home'));
 
 // ==========================================
@@ -67,6 +71,79 @@ async function buscarCartaPorNome(termo) {
 }
 
 // ==========================================
+// AUTENTICAÇÃO: CADASTRO
+// ==========================================
+router.get('/cadastro', (req, res) => {
+    res.render('cadastro', { erro: null });
+});
+
+router.post('/cadastro', async (req, res) => {
+    try {
+        const { username, email, idade, senha, confirmarSenha } = req.body;
+
+        if (senha !== confirmarSenha) {
+            return res.render('cadastro', { erro: 'As senhas não coincidem.' });
+        }
+
+        const utilizadorExistente = await User.findOne({ $or: [{ email }, { username }] });
+        if (utilizadorExistente) {
+            return res.render('cadastro', { erro: 'Email ou Nome de Usuário já em uso.' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const senhaHash = await bcrypt.hash(senha, salt);
+
+        const novoUser = new User({
+            username,
+            email,
+            idade,
+            senha: senhaHash
+        });
+
+        await novoUser.save();
+        res.redirect('/');
+    } catch (erro) {
+        res.render('cadastro', { erro: 'Erro ao criar conta. Tente novamente.' });
+    }
+});
+
+// ==========================================
+// AUTENTICAÇÃO: LOGIN
+// ==========================================
+router.get('/login', (req, res) => {
+    res.redirect('/');
+});
+
+router.post('/login', async (req, res) => {
+    try {
+        const { email, senha } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.render('index', { erro: 'Email ou senha incorretos.', title: 'TCG Deck Builder' });
+        }
+
+        const senhaValida = await bcrypt.compare(senha, user.senha);
+        if (!senhaValida) {
+            return res.render('index', { erro: 'Email ou senha incorretos.', title: 'TCG Deck Builder' });
+        }
+
+        req.session.user = { id: user._id, username: user.username };
+        res.redirect('/home');
+    } catch (erro) {
+        res.render('index', { erro: 'Erro ao fazer login.', title: 'TCG Deck Builder' });
+    }
+});
+
+// ==========================================
+// AUTENTICAÇÃO: LOGOUT
+// ==========================================
+router.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/');
+});
+
+// ==========================================
 // PASSO 1: Homepage
 // ==========================================
 router.get('/home', async (req, res) => {
@@ -108,7 +185,6 @@ router.get('/pokemon/:nome_pokemon', async (req, res) => {
         const decksFormatados = [];
         for (const deck of decksFiltrados) {
             let imagensCapa = [];
-            // Em vez da 1ª carta, procura as imagens de TODOS os pokémons principais
             if (deck.pokemons_principais && deck.pokemons_principais.length > 0) {
                 for (const pkmn of deck.pokemons_principais) {
                     const cartaApi = await buscarCartaPorNome(pkmn);
@@ -128,7 +204,6 @@ router.get('/pokemon/:nome_pokemon', async (req, res) => {
 
 // ==========================================
 // PASSO 3: Detalhes do Deck
-// (Mantém-se igual ao que já tens)
 // ==========================================
 router.get('/deck/:id_deck', async (req, res) => {
     try {
@@ -153,11 +228,18 @@ router.get('/deck/:id_deck', async (req, res) => {
 });
 
 // ==========================================
-// Seus Decks
+// Seus Decks (FILTRADO POR UTILIZADOR)
 // ==========================================
 router.get('/seus-decks', async (req, res) => {
+    // 1. Bloqueia o acesso se o utilizador não estiver logado
+    if (!req.session || !req.session.user) {
+        return res.redirect('/'); 
+    }
+
     try {
-        const meusDecks = await Deck.find({}).lean();
+        // 2. Busca APENAS os decks onde o 'autor' bate certo com o username logado
+        const meusDecks = await Deck.find({ autor: req.session.user.username }).lean();
+        
         const decksComCapa = [];
         for (const deck of meusDecks) {
             let imagensCapa = [];
@@ -172,7 +254,9 @@ router.get('/seus-decks', async (req, res) => {
             decksComCapa.push({ id: deck._id, nome: deck.nome, imagensCapa: imagensCapa });
         }
         res.render('seus-decks', { paginaAtual: 'seus-decks', decks: decksComCapa });
-    } catch (erro) { res.status(500).send('Erro ao carregar os teus decks.'); }
+    } catch (erro) { 
+        res.status(500).send('Erro ao carregar os teus decks.'); 
+    }
 });
 
 module.exports = router;

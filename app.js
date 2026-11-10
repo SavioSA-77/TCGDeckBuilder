@@ -11,6 +11,22 @@ var app = express();
 
 app.use(express.json());
 
+const session = require('express-session');
+
+// Adiciona isto antes das tuas rotas (app.use('/', indexRouter);)
+app.use(session({
+    secret: 'pokebuilder-chave-secreta-super-segura',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false } // Em produção com HTTPS, muda para true
+}));
+
+// Middleware para passar a sessão para as views EJS automaticamente
+app.use((req, res, next) => {
+    res.locals.user = req.session.user || null;
+    next();
+});
+
 const Carta = require('./models/carta'); // Importa o modelo
 const Deck = require('./models/deck'); // Importa o modelo
 
