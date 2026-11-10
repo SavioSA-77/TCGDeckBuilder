@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Deck - PokéBuilder</title>
+    <link rel="stylesheet" href="/stylesheets/home.css">
+    <style>
+        .search-container { text-align: center; margin: 30px 0; }
+        .search-bar { width: 80%; max-width: 600px; padding: 15px; font-size: 18px; border: 2px solid #1f3659; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); outline: none; }
+        .search-bar:focus { border-color: #fccf00; }
+        
+        /* Estilos das cartas pesquisadas */
+        .card-selectable { cursor: pointer; position: relative; transition: transform 0.2s; }
+        .card-selectable img { width: 100%; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .card-selectable:hover { transform: translateY(-5px); }
+        .card-selectable.selected img { border: 4px solid #fccf00; box-sizing: border-box; }
+        .card-selectable.selected::after { content: '✓'; position: absolute; top: -10px; right: -10px; background: #fccf00; color: #1f3659; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; border: 2px solid #1f3659; }
+
+        /* Barra de seleção flutuante no rodapé */
+        .selection-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1f3659; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 -4px 10px rgba(0,0,0,0.3); }
+        .selected-cards { display: flex; gap: 10px; margin-top: 5px; }
+        .selected-card-mini { width: 45px; height: 60px; border-radius: 4px; object-fit: cover; border: 2px solid #fccf00; }
+        .btn-continuar { background: #fccf00; color: #1f3659; border: none; padding: 12px 25px; font-size: 16px; font-weight: bold; border-radius: 5px; cursor: pointer; transition: background 0.2s; }
+        .btn-continuar:disabled { background: #555; color: #888; cursor: not-allowed; }
+        .btn-continuar:not(:disabled):hover { background: #e5b900; }
+        
+        .loading { text-align: center; font-size: 18px; color: #666; margin-bottom: 20px; display: none; }
+    </style>
+</head>
+<body class="home-page">
+    
+    <header class="header-hex">
+        <div class="header-logo-container-sm">
+            <div class="pokebola-sm"></div>
+            <h1 class="title-sm">PokéBuilder</h1>
+        </div>
+        <nav class="navbar-custom">
+            <a href="/home" class="nav-btn">Decks</a>
+            <a href="/seus-decks" class="nav-btn">Seus Decks</a>
+            <a href="/criar-deck" class="nav-btn ativo-amarelo">+ Novo Deck</a>
+            <a href="/logout" class="nav-btn">Sair</a>
+        </nav>
+    </header>
+
+    <main class="catalog" style="padding-bottom: 120px;">
+        <div style="text-align: center; padding-top: 20px;">
+            <h2 class="titulo-minimalista" style="font-size: 28px; margin: 0;">Criação de Decks</h2>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="searchBar" class="search-bar" placeholder="Pesquise seu favorito..." autocomplete="off">
+        </div>
+
+        <div id="loading" class="loading">Buscando cartas na API...</div>
+
+        <!-- Grade onde as cartas aparecem em tempo real -->
+        <div class="catalog-grid" id="resultsGrid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px;">
+        </div>
+    </main>
+
+    <!-- Barra fixada na base para exibir o que foi selecionado -->
+    <div class="selection-bar">
+        <div>
+            <strong style="font-size: 14px;">Pokémons Principais Selecionados (1 a 3):</strong>
+            <div class="selected-cards" id="selectedCardsContainer">
+                <span style="font-size: 12px; color: #aaa; margin-top: 5px;">Nenhum Pokémon selecionado ainda.</span>
+            </div>
+        </div>
+        <!-- Ao submeter, os nomes escolhidos seguem para a próxima página de montagem -->
+        <form action="/montar-deck" method="GET" id="form-continuar">
+            <input type="hidden" name="pokemons" id="hiddenPokemons">
+            <button type="submit" class="btn-continuar" id="btnContinuar" disabled>Continuar Montagem</button>
+        </form>
+    </div>
+
+    <script>
+        const searchBar = document.getElementById('searchBar');
+        const resultsGrid = document.getElementById('resultsGrid');
+        const loading = document.getElementById('loading');
+        const selectedCardsContainer = document.getElementById('selectedCardsContainer');
+        const hiddenPokemons = document.getElementById('hiddenPokemons');
+        const btnContinuar = document.getElementById('btnContinuar');
+
+        let timeoutId;
+        let selecionados = []; // Array de objetos { id, nome, imagem }
+
+        // Evento que dispara enquanto o utilizador digita
+        searchBar.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+            
+            clearTimeout(timeoutId);
+            
+            if (query.length < 3) {
+                resultsGrid.innerHTML = '';
+                return;
+            }
+
+            loading.style.display = 'block';
+            resultsGrid.innerHTML = '';
+
+            // Debounce: Aguarda 500ms de pausa na digitação para fazer o fetch
+            timeoutId = setTimeout(() => {
+                buscarNaAPI(query);
+            }, 500);
+        });
+
+        async function buscarNaAPI(termo) {
+            try {
+                const url = `https://api.tcgdex.net/v2/en/cards?name=${encodeURIComponent(termo)}`;
+                const res = await fetch(url);
+                const cartas = await res.json();
+
+                if (Array.isArray(cartas)) {
+                    // Filtra apenas cartas que têm imagem e pega as primeiras 30 para não travar o ecrã
+                    const resultadosValidos = cartas.filter(c => c.image).slice(0, 30);
+                    renderizarResultados(resultadosValidos);
+                }
+            } catch (error) {
+                console.error("Erro na busca:", error);
+                resultsGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Erro ao contactar a API.</p>';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function renderizarResultados(cartas) {
+            if (cartas.length === 0) {
+                resultsGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Nenhuma carta encontrada.</p>';
+                return;
+            }
+
+            cartas.forEach(carta => {
+                const imgUrl = carta.image + '/high.png';
+                const isSelected = selecionados.find(s => s.id === carta.id);
+                
+                const div = document.createElement('div');
+                div.className = `card-selectable ${isSelected ? 'selected' : ''}`;
+                div.innerHTML = `<img src="${imgUrl}" alt="${carta.name}">`;
+                
+                div.addEventListener('click', () => toggleSelecao(carta.id, carta.name, imgUrl, div));
+                resultsGrid.appendChild(div);
+            });
+        }
+
+        function toggleSelecao(id, nome, imagem, elementoCard) {
+            const index = selecionados.findIndex(s => s.id === id);
+
+            if (index > -1) {
+                // Remove se já estiver selecionado
+                selecionados.splice(index, 1);
+                elementoCard.classList.remove('selected');
+            } else {
+                // Adiciona se houver espaço (máximo 3)
+                if (selecionados.length >= 3) {
+                    alert('Só podes escolher até 3 Pokémons principais!');
+                    return;
+                }
+                selecionados.push({ id, nome, imagem });
+                elementoCard.classList.add('selected');
+            }
+            atualizarBarraSelecao();
+        }
+
+        function atualizarBarraSelecao() {
+            selectedCardsContainer.innerHTML = '';
+            
+            if (selecionados.length === 0) {
+                selectedCardsContainer.innerHTML = '<span style="font-size: 12px; color: #aaa; margin-top: 5px;">Nenhum Pokémon selecionado ainda.</span>';
+                btnContinuar.disabled = true;
+                hiddenPokemons.value = '';
+                return;
+            }
+
+            btnContinuar.disabled = false;
+            
+            // Extrai apenas os nomes exatos para mandar para o backend
+            const nomesSelecionados = selecionados.map(s => s.nome);
+            hiddenPokemons.value = JSON.stringify(nomesSelecionados);
+
+            // Exibe as miniaturas no rodapé
+            selecionados.forEach(s => {
+                const img = document.createElement('img');
+                img.src = s.imagem;
+                img.className = 'selected-card-mini';
+                img.title = s.nome;
+                selectedCardsContainer.appendChild(img);
+            });
+        }
+    </script>
+</body>
+</html>

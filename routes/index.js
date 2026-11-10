@@ -15,7 +15,6 @@ router.get('/homepage', (req, res) => res.redirect('/home'));
 async function buscarCartaPorNome(termo) {
     if (!termo) return null;
     try {
-        // 1. Tenta buscar por ID direto se tiver hífen (ex: sv06-130)
         if (termo.includes('-')) {
             try {
                 const resID = await fetch(`https://api.tcgdex.net/v2/en/cards/${termo.toLowerCase()}`);
@@ -24,10 +23,8 @@ async function buscarCartaPorNome(termo) {
                     if (dataID && dataID.image) return dataID;
                 }
             } catch (e) {}
-            // Se falhar como ID (ex: "Chi-Yu"), NÃO cancela! Continua para a busca por nome abaixo.
         }
 
-        // 2. Busca por Nome na API
         const url = `https://api.tcgdex.net/v2/en/cards?name=${encodeURIComponent(termo)}`;
         const res = await fetch(url);
         
@@ -39,7 +36,6 @@ async function buscarCartaPorNome(termo) {
                 let candidatas = cartas.filter(c => c && c.image);
                 if (candidatas.length === 0) return null;
 
-                // Filtros específicos para evitar ambiguidades
                 if (termoLower === 'munkidori') {
                     candidatas = candidatas.filter(c => !c.name.toLowerCase().includes('ex'));
                 } else if (termoLower === 'dunsparce') {
@@ -51,7 +47,6 @@ async function buscarCartaPorNome(termo) {
 
                 if (candidatas.length === 0) return null;
 
-                // SELEÇÃO POR ERA: Prioriza Scarlet & Violet ('sv'), depois Sword & Shield ('swsh')
                 const svCard = candidatas.find(c => c.id && c.id.toLowerCase().startsWith('sv'));
                 if (svCard) return svCard;
 
@@ -228,18 +223,14 @@ router.get('/deck/:id_deck', async (req, res) => {
 });
 
 // ==========================================
-// Seus Decks (FILTRADO POR UTILIZADOR)
+// Seus Decks
 // ==========================================
 router.get('/seus-decks', async (req, res) => {
-    // 1. Bloqueia o acesso se o utilizador não estiver logado
     if (!req.session || !req.session.user) {
         return res.redirect('/'); 
     }
-
     try {
-        // 2. Busca APENAS os decks onde o 'autor' bate certo com o username logado
         const meusDecks = await Deck.find({ autor: req.session.user.username }).lean();
-        
         const decksComCapa = [];
         for (const deck of meusDecks) {
             let imagensCapa = [];
@@ -254,9 +245,17 @@ router.get('/seus-decks', async (req, res) => {
             decksComCapa.push({ id: deck._id, nome: deck.nome, imagensCapa: imagensCapa });
         }
         res.render('seus-decks', { paginaAtual: 'seus-decks', decks: decksComCapa });
-    } catch (erro) { 
-        res.status(500).send('Erro ao carregar os teus decks.'); 
+    } catch (erro) { res.status(500).send('Erro ao carregar os teus decks.'); }
+});
+
+// ==========================================
+// CRIAR DECK (Passo 1: Escolher Pokémons Principais)
+// ==========================================
+router.get('/criar-deck', (req, res) => {
+    if (!req.session || !req.session.user) {
+        return res.redirect('/'); 
     }
+    res.render('criar-deck', { paginaAtual: 'criar-deck' });
 });
 
 module.exports = router;
