@@ -258,4 +258,138 @@ router.get('/criar-deck', (req, res) => {
     res.render('criar-deck', { paginaAtual: 'criar-deck' });
 });
 
+// ==========================================
+// CRIAR DECK (Passo 2: Montar o Deck com Recomendações)
+// ==========================================
+router.get('/montar-deck', async (req, res) => {
+    if (!req.session || !req.session.user) {
+        return res.redirect('/'); 
+    }
+    
+    let pokemonsPrincipais = [];
+    if (req.query.pokemons) {
+        try { pokemonsPrincipais = JSON.parse(req.query.pokemons); } 
+        catch (e) { console.error("Erro ao ler pokemons selecionados."); }
+    }
+
+    // --- ALGORITMO DE RECOMENDAÇÃO HÍBRIDO ---
+    let recomendacoes = [];
+    try {
+        // 1. Procura no banco os decks que têm os Pokémon escolhidos
+        const decksRelacionados = await Deck.find({
+            pokemons_principais: { $in: pokemonsPrincipais }
+        });
+
+       // 2. Conta a frequência (pontos de sinergia) com segurança de formato
+        const sinergia = {};
+        decksRelacionados.forEach(deck => {
+            deck.cartas.forEach(carta => {
+                if (carta.carta_id_api) {
+                    // Guarda tudo em minúsculas para garantir que "Dreepy" seja lido igual a "dreepy"
+                    const chave = carta.carta_id_api.toLowerCase().trim();
+                    sinergia[chave] = (sinergia[chave] || 0) + 1;
+                }
+            });
+        });
+
+        // 3. Busca a lista leve de TODAS as cartas na TCGdex de uma vez (1 única requisição rápida)
+        const resTodas = await fetch('https://api.tcgdex.net/v2/pt/cards');
+        const todasCartas = await resTodas.json();
+
+        if (Array.isArray(todasCartas)) {
+            // 4. Filtra apenas as do formato competitivo atual (para não trazer cartas velhas)
+            let cartasValidas = todasCartas.filter(c => {
+                if (!c.image) return false;
+                const id = c.id.toLowerCase();
+                
+                // Permite Promos, Energias e SV5 em diante (Marcação H+)
+                if (id.startsWith('svp') || id.startsWith('sve')) return true;
+                const matchSV = id.match(/^sv(\d+)/);
+                if (matchSV && parseInt(matchSV[1]) >= 5) return true;
+                
+                return false;
+            });
+
+            // 5. ORDENAÇÃO DE SINERGIA: 
+            cartasValidas.sort((a, b) => {
+            const idA = a.id ? a.id.toLowerCase() : '';
+            const nomeA = a.name ? a.name.toLowerCase() : '';
+            // Pontua se bater com o ID OU com o Nome salvo no banco
+            const scoreA = (sinergia[idA] || 0) + (sinergia[nomeA] || 0);
+
+            const idB = b.id ? b.id.toLowerCase() : '';
+            const nomeB = b.name ? b.name.toLowerCase() : '';
+            const scoreB = (sinergia[idB] || 0) + (sinergia[nomeB] || 0);
+
+            // Maior pontuação (sinergia) vai para o topo
+            if (scoreB !== scoreA) {
+                return scoreB - scoreA; 
+            }
+            
+            // Desempate: Se as cartas tiverem a mesma pontuação (ex: 0), ordena por ordem alfabética
+            return a.name.localeCompare(b.name);
+        });
+
+            // 6. Cortamos em 150 cartas para a página carregar rápido e não travar o browser
+            recomendacoes = cartasValidas.slice(0, 150).map(c => ({
+                id: c.id,
+                nome: c.name,
+                imagem: c.image + '/high.png'
+            }));
+        }
+    } catch (error) {
+        console.error("Erro ao gerar recomendações:", error);
+    }
+
+    res.render('montar-deck', { 
+        paginaAtual: 'criar-deck',
+        pokemonsPrincipais: pokemonsPrincipais,
+        recomendacoes: recomendacoes
+    });
+});
+
+// ==========================================
+// SALVAR DECK (Passo Final)
+// ==========================================
+router.post('/salvar-deck', async (req, res) => {
+    if (!req.session || !req.session.user) {
+        return res.status(401).json({ erro: 'Utilizador não autenticado.' });
+    }
+
+    try {
+        const { nome, pokemonsPrincipais, cartas } = req.body || {};
+        const nomeDeck = typeof nome === 'string' ? nome.trim() : '';
+
+        if (!nomeDeck || !Array.isArray(cartas) || cartas.length === 0) {
+            return res.status(400).json({ erro: 'O deck precisa de um nome e pelo menos uma carta.' });
+        }
+
+        if (cartas.some(carta =>
+            !carta ||
+            typeof carta.carta_id_api !== 'string' ||
+            !carta.carta_id_api.trim() ||
+            !Number.isInteger(carta.quantidade) ||
+            carta.quantidade < 1 ||
+            carta.quantidade > 4
+        )) {
+            return res.status(400).json({ erro: 'As cartas do deck são inválidas.' });
+        }
+
+        const novoDeck = new Deck({
+            nome: nomeDeck,
+            autor: req.session.user.username,
+            pokemons_principais: Array.isArray(pokemonsPrincipais)
+                ? pokemonsPrincipais.filter(pokemon => typeof pokemon === 'string')
+                : [],
+            cartas
+        });
+
+        await novoDeck.save();
+        res.status(200).json({ sucesso: true, redirect: '/seus-decks' });
+    } catch (erro) {
+        console.error('Erro ao salvar deck:', erro);
+        res.status(500).json({ erro: 'Erro interno ao salvar o deck.' });
+    }
+});
+
 module.exports = router;

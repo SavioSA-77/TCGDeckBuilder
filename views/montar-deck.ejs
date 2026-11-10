@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Montar Deck - PokéBuilder</title>
+    <link rel="stylesheet" href="/stylesheets/home.css">
+    <style>
+        .builder-layout { display: flex; gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto; height: calc(100vh - 120px); }
+        
+        /* ESQUERDA: Decklist */
+        .deck-panel { flex: 1; background: #1f3659; color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; flex-direction: column; overflow: hidden; }
+        .deck-name-input { width: 100%; padding: 12px; font-size: 18px; border-radius: 5px; border: none; margin-bottom: 15px; box-sizing: border-box; font-weight: bold; }
+        .deck-list { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 5px; }
+        .deck-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 5px; margin-bottom: 8px; font-size: 14px; }
+        .qty-controls { display: flex; align-items: center; gap: 10px; }
+        .qty-btn { background: #fccf00; border: none; border-radius: 3px; width: 24px; height: 24px; font-weight: bold; cursor: pointer; color: #1f3659; display: flex; align-items: center; justify-content: center; }
+        .qty-btn:hover { background: #fff; }
+        .deck-summary { font-size: 18px; font-weight: bold; text-align: right; margin-bottom: 15px; }
+        .btn-salvar { background: #fccf00; color: #1f3659; border: none; padding: 15px; font-size: 18px; font-weight: bold; border-radius: 5px; cursor: pointer; width: 100%; transition: background 0.2s; }
+        .btn-salvar:hover { background: #e5b900; }
+        .btn-salvar:disabled { background: #555; color: #888; cursor: not-allowed; }
+
+        /* DIREITA: Recomendações e Busca */
+        .cards-panel { flex: 2; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
+        .search-bar { width: 100%; padding: 12px; font-size: 16px; border: 2px solid #1f3659; border-radius: 8px; box-sizing: border-box; outline: none; margin-bottom: 15px; }
+        .search-bar:focus { border-color: #fccf00; }
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; overflow-y: auto; padding-right: 5px; }
+        .card-result { cursor: pointer; transition: transform 0.2s; position: relative; }
+        .card-result img { width: 100%; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .card-result:hover { transform: scale(1.05); }
+        .card-result:hover::after { content: '+ Adicionar'; position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%); background: rgba(31, 54, 89, 0.9); color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; white-space: nowrap; pointer-events: none; }
+        .section-title { font-size: 20px; color: #1f3659; margin-top: 0; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; }
+        .loading { text-align: center; color: #888; font-style: italic; display: none; margin-bottom: 10px; }
+
+        /* Scrollbar customizada */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #fccf00; border-radius: 4px; }
+    </style>
+</head>
+<body class="home-page">
+
+    <header class="header-hex">
+        <div class="header-logo-container-sm">
+            <div class="pokebola-sm"></div>
+            <h1 class="title-sm">PokéBuilder</h1>
+        </div>
+        <nav class="navbar-custom">
+            <a href="/home" class="nav-btn">Decks</a>
+            <a href="/seus-decks" class="nav-btn">Seus Decks</a>
+            <a href="/criar-deck" class="nav-btn ativo-amarelo">+ Novo Deck</a>
+            <a href="/logout" class="nav-btn">Sair</a>
+        </nav>
+    </header>
+
+    <main class="builder-layout">
+        <!-- LADO ESQUERDO: Decklist -->
+        <section class="deck-panel">
+            <input type="text" id="deckName" class="deck-name-input" placeholder="Nome do seu Deck..." autocomplete="off">
+            
+            <div style="font-size: 13px; color: #ccc; margin-bottom: 15px;">
+                <strong>Principais:</strong> <%= pokemonsPrincipais.join(' • ') %>
+            </div>
+
+            <div class="deck-list" id="deckListContainer">
+                <!-- Cartas inseridas via JS -->
+            </div>
+
+            <div class="deck-summary">
+                Total: <span id="totalCards">0</span> / 60
+            </div>
+
+            <button class="btn-salvar" id="btnSalvar">Salvar Deck</button>
+        </section>
+
+        <!-- LADO DIREITO: Recomendações / Pesquisa -->
+        <section class="cards-panel">
+            <h2 class="section-title" id="panelTitle">
+                Recomendações do Meta
+                <span style="font-size: 14px; font-weight: normal; color: #666;">(Baseado nos seus Pokémons)</span>
+            </h2>
+            
+            <input type="text" id="searchBar" class="search-bar" placeholder="Pesquisar outras cartas (Pokémon, Treinador, Energia)..." autocomplete="off">
+            <div id="loading" class="loading">Procurando cartas...</div>
+            
+            <div class="cards-grid" id="cardsGrid">
+                <% if (recomendacoes.length === 0) { %>
+                    <p style="grid-column: 1/-1; text-align: center; color: #666; margin-top: 40px;">
+                        Nenhum dado suficiente ainda para recomendações. Comece a pesquisar acima!
+                    </p>
+                <% } else { %>
+                    <% recomendacoes.forEach(carta => { %>
+                        <div class="card-result" onclick="adicionarCarta('<%= carta.id %>', '<%= carta.nome %>')">
+                            <img src="<%= carta.imagem %>" alt="<%= carta.nome %>">
+                        </div>
+                    <% }) %>
+                <% } %>
+            </div>
+        </section>
+    </main>
+
+    <!-- Passar as recomendações iniciais para o JS não perder ao pesquisar -->
+    <div id="initialRecommendations" style="display: none;">
+        <%= JSON.stringify(recomendacoes) %>
+    </div>
+    <div id="dadosPrincipais" data-pokemons='<%- JSON.stringify(pokemonsPrincipais) %>'></div>
+
+    <script>
+        // --- 1. CONFIGURAÇÃO DE ESTADO ---
+        const deckState = {}; // { id: { id, nome, quantidade } }
+        const pokemonsPrincipais = JSON.parse(document.getElementById('dadosPrincipais').dataset.pokemons || '[]');
+        const recomendacoesIniciais = JSON.parse(document.getElementById('initialRecommendations').innerText || '[]');
+
+        // --- 2. ELEMENTOS DO DOM ---
+        const deckListContainer = document.getElementById('deckListContainer');
+        const totalCardsEl = document.getElementById('totalCards');
+        const cardsGrid = document.getElementById('cardsGrid');
+        const searchBar = document.getElementById('searchBar');
+        const loading = document.getElementById('loading');
+        const panelTitle = document.getElementById('panelTitle');
+        const btnSalvar = document.getElementById('btnSalvar');
+
+        // --- 3. LÓGICA DO DECK (ESQUERDA) ---
+        function adicionarCarta(id, nome) {
+            // Conta quantas cartas já existem no deck
+            const totalAtual = Object.values(deckState).reduce((acc, c) => acc + c.quantidade, 0);
+            
+            if (totalAtual >= 60) {
+                return alert('O deck já atingiu o limite máximo de 60 cartas!');
+            }
+
+            if (!deckState[id]) {
+                deckState[id] = { id, nome, quantidade: 1 };
+            } else {
+                // Limite de 4 cópias, exceto se for Energia Básica (sve)
+                const isBasicEnergy = id.toLowerCase().startsWith('sve') || nome.toLowerCase().includes('energia básica') || nome.toLowerCase().includes('basic energy');
+                if (deckState[id].quantidade >= 4 && !isBasicEnergy) {
+                    return alert('Limite de 4 cópias atingido para esta carta!');
+                }
+                deckState[id].quantidade++;
+            }
+            renderizarDeck();
+        }
+
+        function alterarQuantidade(id, delta) {
+            if (!deckState[id]) return;
+            
+            const totalAtual = Object.values(deckState).reduce((acc, c) => acc + c.quantidade, 0);
+            if (delta > 0 && totalAtual >= 60) {
+                return alert('O deck já atingiu o limite máximo de 60 cartas!');
+            }
+
+            deckState[id].quantidade += delta;
+            
+            if (deckState[id].quantidade <= 0) {
+                delete deckState[id]; // Remove se zero
+            } else {
+                const isBasicEnergy = id.toLowerCase().startsWith('sve') || deckState[id].nome.toLowerCase().includes('energia') || deckState[id].nome.toLowerCase().includes('energy');
+                if (deckState[id].quantidade > 4 && !isBasicEnergy) {
+                    deckState[id].quantidade = 4;
+                }
+            }
+            renderizarDeck();
+        }
+
+        function renderizarDeck() {
+            deckListContainer.innerHTML = '';
+            let total = 0;
+
+            Object.values(deckState).forEach(carta => {
+                total += carta.quantidade;
+                const item = document.createElement('div');
+                item.className = 'deck-item';
+                
+                // Trunca o nome se for muito longo
+                const nomeCurto = carta.nome.length > 22 ? carta.nome.substring(0, 22) + '...' : carta.nome;
+
+                item.innerHTML = `
+                    <span title="${carta.nome}">${nomeCurto}</span>
+                    <div class="qty-controls">
+                        <button class="qty-btn" onclick="alterarQuantidade('${carta.id}', -1)">-</button>
+                        <span>${carta.quantidade}</span>
+                        <button class="qty-btn" onclick="alterarQuantidade('${carta.id}', 1)">+</button>
+                    </div>
+                `;
+                deckListContainer.appendChild(item);
+            });
+
+            totalCardsEl.innerText = total;
+            totalCardsEl.style.color = total === 60 ? '#27ae60' : 'white'; // Fica verde quando atinge 60
+        }
+
+        // --- 4. LÓGICA DE PESQUISA (DIREITA) ---
+        let timeoutId;
+        searchBar.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+            clearTimeout(timeoutId);
+            
+            if (query.length === 0) {
+                // Voltar para a tela de recomendações se apagar a pesquisa
+                restaurarRecomendacoes();
+                return;
+            }
+            if (query.length < 3) return;
+
+            loading.style.display = 'block';
+            cardsGrid.innerHTML = '';
+            panelTitle.innerHTML = 'Resultados da Pesquisa';
+
+            timeoutId = setTimeout(() => buscarNaAPI(query), 500);
+        });
+
+        async function buscarNaAPI(termo) {
+            try {
+                // TCGdex em português com o seu filtro estruturado
+                const res = await fetch(`https://api.tcgdex.net/v2/pt/cards?name=${encodeURIComponent(termo)}`);
+                const cartas = await res.json();
+                
+                if (Array.isArray(cartas)) {
+                    const resultadosValidos = cartas.filter(c => {
+                        if (!c.image) return false;
+                        const id = c.id.toLowerCase();
+                        
+                        // Bloqueia eras antigas para focar no Standard
+                        if (id.startsWith('swsh') || id.startsWith('sm') || id.startsWith('xy') || id.startsWith('bw')) return false;
+                        
+                        const matchSV = id.match(/^sv(\d+)/);
+                        if (matchSV) {
+                            if (parseInt(matchSV[1]) < 5) return false;
+                        }
+                        return true;
+                    }).slice(0, 30);
+                    
+                    renderizarGrade(resultadosValidos);
+                }
+            } catch (error) {
+                cardsGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Erro ao buscar cartas.</p>';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function renderizarGrade(cartas) {
+            cardsGrid.innerHTML = '';
+            if (cartas.length === 0) {
+                cardsGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #666; margin-top: 20px;">Nenhuma carta encontrada para o formato atual.</p>';
+                return;
+            }
+
+            cartas.forEach(carta => {
+                const imgUrl = carta.image + '/high.png';
+                const div = document.createElement('div');
+                div.className = 'card-result';
+                div.innerHTML = `<img src="${imgUrl}" alt="${carta.name}">`;
+                div.onclick = () => adicionarCarta(carta.id, carta.name);
+                cardsGrid.appendChild(div);
+            });
+        }
+
+        function restaurarRecomendacoes() {
+            panelTitle.innerHTML = 'Recomendações do Meta <span style="font-size: 14px; font-weight: normal; color: #666;">(Baseado nos seus Pokémons)</span>';
+            cardsGrid.innerHTML = '';
+            recomendacoesIniciais.forEach(carta => {
+                const div = document.createElement('div');
+                div.className = 'card-result';
+                div.innerHTML = `<img src="${carta.imagem}" alt="${carta.nome}">`;
+                div.onclick = () => adicionarCarta(carta.id, carta.nome);
+                cardsGrid.appendChild(div);
+            });
+        }
+
+        // --- 5. SALVAR DECK ---
+        btnSalvar.addEventListener('click', async () => {
+            const nomeDeck = document.getElementById('deckName').value.trim();
+            const cartasArray = Object.values(deckState).map(c => ({
+                carta_id_api: c.id,
+                quantidade: c.quantidade
+            }));
+
+            if (!nomeDeck) return alert('Dê um nome ao seu deck!');
+            if (cartasArray.length === 0) return alert('Adicione cartas ao seu deck!');
+            
+            // Opcional: Impedir de salvar se não tiver 60 cartas (regra oficial)
+            // const totalCartas = cartasArray.reduce((acc, c) => acc + c.quantidade, 0);
+            // if (totalCartas !== 60) return alert('O deck precisa ter exatamente 60 cartas!');
+
+            btnSalvar.disabled = true;
+            btnSalvar.innerText = 'Salvando...';
+
+            try {
+                const response = await fetch('/salvar-deck', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nome: nomeDeck,
+                        pokemonsPrincipais: pokemonsPrincipais,
+                        cartas: cartasArray
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.sucesso) {
+                    window.location.href = data.redirect;
+                } else {
+                    alert(data.erro || 'Erro ao salvar deck.');
+                    btnSalvar.disabled = false;
+                    btnSalvar.innerText = 'Salvar Deck';
+                }
+            } catch (error) {
+                alert('Erro de comunicação com o servidor.');
+                btnSalvar.disabled = false;
+                btnSalvar.innerText = 'Salvar Deck';
+            }
+        });
+    </script>
+</body>
+</html>

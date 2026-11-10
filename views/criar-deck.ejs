@@ -107,13 +107,31 @@
 
         async function buscarNaAPI(termo) {
             try {
-                const url = `https://api.tcgdex.net/v2/en/cards?name=${encodeURIComponent(termo)}`;
-                const res = await fetch(url);
+                const res = await fetch(`https://api.tcgdex.net/v2/pt/cards?name=${encodeURIComponent(termo)}`);
                 const cartas = await res.json();
-
+                
                 if (Array.isArray(cartas)) {
-                    // Filtra apenas cartas que têm imagem e pega as primeiras 30 para não travar o ecrã
-                    const resultadosValidos = cartas.filter(c => c.image).slice(0, 30);
+                    const resultadosValidos = cartas.filter(c => {
+                        if (!c.image) return false;
+                        
+                        const id = c.id.toLowerCase();
+                        
+                        // 1. Bloqueia sumariamente todas as eras antigas (Sword&Shield, Sun&Moon, XY, Black&White)
+                        if (id.startsWith('swsh') || id.startsWith('sm') || id.startsWith('xy') || id.startsWith('bw')) {
+                            return false;
+                        }
+                        
+                        // 2. Bloqueia as primeiras coleções de Scarlet & Violet (SV1 a SV4) que expiram antes da marcação H
+                        const matchSV = id.match(/^sv(\d+)/);
+                        if (matchSV) {
+                            const numSet = parseInt(matchSV[1]);
+                            if (numSet < 5) return false; // Bloqueia sv1, sv2, sv3 e sv4
+                        }
+                        
+                        // 3. Permite todo o resto: SV5+ (Marcação H em diante), Promos (svp), Energias e NOVAS eras
+                        return true;
+                    }).slice(0, 30);
+                    
                     renderizarResultados(resultadosValidos);
                 }
             } catch (error) {
