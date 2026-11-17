@@ -7,29 +7,14 @@
     <link rel="stylesheet" href="/stylesheets/home.css">
     <link rel="stylesheet" href="/stylesheets/criar-deck.css">
 </head>
-<body class="home-page">
+<body class="home-page retro-bg">
     
-    <header class="header-hex">
-        <div class="header-logo-container-sm">
-            <div class="pokebola-sm"></div>
-            <h1 class="title-sm">PokéBuilder</h1>
-        </div>
-        <nav class="navbar-custom">
-            <a href="/home" class="nav-btn">Decks</a>
-            <a href="/seus-decks" class="nav-btn">Seus Decks</a>
-            <a href="/criar-deck" class="nav-btn ativo-amarelo">+ Novo Deck</a>
-            <a href="/logout" class="nav-btn">Sair</a>
-        </nav>
-    </header>
+    <%- include('partials/navbar') %>
 
     <main class="catalog" style="padding-bottom: 120px;">
-        <div style="text-align: center; padding-top: 20px;">
-            <h2 class="titulo-minimalista" style="font-size: 28px; margin: 0;">Criação de Decks</h2>
-        </div>
+        <h2 class="titulo-minimalista page-title">Criação de Decks</h2>
 
-        <div class="search-container">
-            <input type="text" id="searchBar" class="search-bar" placeholder="Pesquise seu favorito..." autocomplete="off">
-        </div>
+        <input type="text" id="searchBar" class="search-bar" placeholder="Pesquise seu favorito..." autocomplete="off">
 
         <div id="loading" class="loading">Buscando cartas na API...</div>
 
@@ -39,7 +24,7 @@
     </main>
 
     <!-- Barra fixada na base para exibir o que foi selecionado -->
-    <div class="selection-bar">
+    <div class="selection-bar retro-panel">
         <div>
             <strong style="font-size: 14px;">Pokémons Principais Selecionados (1 a 3):</strong>
             <div class="selected-cards" id="selectedCardsContainer">

@@ -1,0 +1,12 @@
+<header class="header-hex">
+    <div class="header-logo-container-sm">
+        <div class="pokebola-sm"></div>
+        <h1 class="title-sm">PokéBuilder</h1>
+    </div>
+    <nav class="navbar-custom">
+        <a href="/home" class="nav-btn <%= typeof paginaAtual !== 'undefined' && paginaAtual === 'home' ? 'ativo-amarelo' : '' %>">Decks</a>
+        <a href="/seus-decks" class="nav-btn <%= typeof paginaAtual !== 'undefined' && paginaAtual === 'seus-decks' ? 'ativo-amarelo' : '' %>">Seus Decks</a>
+        <a href="/criar-deck" class="nav-btn <%= typeof paginaAtual !== 'undefined' && paginaAtual === 'criar-deck' ? 'ativo-amarelo' : '' %>">+ Novo Deck</a>
+        <a href="/logout" class="nav-btn">Sair</a>
+    </nav>
+</header>

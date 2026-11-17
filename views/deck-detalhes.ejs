@@ -7,22 +7,13 @@
     <link rel="stylesheet" href="/stylesheets/home.css">
     <link rel="stylesheet" href="/stylesheets/deck-detalhes.css">
 </head>
-<body class="home-page">
+<body class="home-page retro-bg">
     
-    <header class="header-hex">
-        <div class="header-logo-container-sm">
-            <div class="pokebola-sm"></div>
-            <h1 class="title-sm">PokéBuilder</h1>
-        </div>
-        <nav class="navbar-custom">
-            <a href="/home" class="nav-btn ativo-amarelo">Decks</a>
-            <a href="/seus-decks" class="nav-btn">Seus Decks</a>
-        </nav>
-    </header>
+    <%- include('partials/navbar') %>
 
     <main class="catalog">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <h2 class="titulo-minimalista" style="margin: 0;"><%= deck.nome %></h2>
+        <div class="page-title-row">
+            <h2 class="titulo-minimalista page-title"><%= deck.nome %></h2>
             <button onclick="history.back()" class="nav-btn" style="background-color: #e5e8e6; color: #333; border: 1px solid #ccc; cursor: pointer;">← Voltar aos Decks</button>
         </div>
 

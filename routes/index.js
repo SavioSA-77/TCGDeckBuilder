@@ -278,15 +278,14 @@ router.get('/montar-deck', async (req, res) => {
         catch (e) { console.error("Erro ao ler pokemons selecionados."); }
     }
 
-    // --- ALGORITMO DE RECOMENDAÇÃO ATUALIZADO ---
     let recomendacoes = [];
     try {
-        // 1. Procura no banco os decks que têm os Pokémon escolhidos
+        // 1. Busca decks relacionados no banco
         const decksRelacionados = await Deck.find({
             pokemons_principais: { $in: pokemonsPrincipais }
         });
 
-       // 2. Conta a frequência (pontos de sinergia)
+        // 2. Calcula sinergia (se não houver decks, a sinergia fica vazia)
         const sinergia = {};
         decksRelacionados.forEach(deck => {
             deck.cartas.forEach(carta => {
@@ -294,7 +293,6 @@ router.get('/montar-deck', async (req, res) => {
                     const chave = carta.carta_id_api.toLowerCase().trim();
                     sinergia[chave] = (sinergia[chave] || 0) + 1;
                 }
-                // Adiciona sinergia também pelo nome para garantir
                 if (carta.nome) {
                     const chaveNome = carta.nome.toLowerCase().trim();
                     sinergia[chaveNome] = (sinergia[chaveNome] || 0) + 1;
@@ -302,87 +300,63 @@ router.get('/montar-deck', async (req, res) => {
             });
         });
 
-        // 3. Busca a lista leve de TODAS as cartas
+        // 3. Busca todas as cartas
         const resTodas = await fetch('https://api.tcgdex.net/v2/en/cards');
         const todasCartas = await resTodas.json();
 
         if (Array.isArray(todasCartas)) {
-            let cartasValidas = [];
+            let comSinergia = [];
+            let semSinergia = [];
 
             todasCartas.forEach(c => {
-                if (!c.image) return;
+                if (!c.image || !c.id) return;
                 
                 const id = c.id.toLowerCase();
-                const nome = c.name ? c.name.toLowerCase() : '';
+                const nome = c.name ? c.name.toLowerCase().trim() : '';
                 
-                // REGRA 1: PASSE LIVRE (Sinergia)
-                // Se você já usou essa carta no banco com esse Pokémon, ela entra direto!
-                // Não importa se é Hariyama (Pokémon), Treinador ou velha. Entra.
-                if (sinergia[id] || sinergia[nome]) {
-                    cartasValidas.push(c);
-                    return; 
-                }
+                const pontos = (sinergia[id] || 0) + (sinergia[nome] || 0);
 
-                // REGRA 2: PREENCHER COM CARTAS DO FORMATO ATUAL
-                // Se a carta NÃO foi usada no banco, nós filtramos para mostrar apenas as válidas.
-                
-                // Corta as eras antigas conhecidas
-                const erasAntigas = /^(swsh|sm|xy|bw|hgss|pl|dp|ex|ecard|neo|gym|base|ru|pop|mcd|cel)/;
-                if (erasAntigas.test(id)) return;
-
-                if (id.startsWith('sv')) {
-                    // Energias Básicas
-                    if (id.startsWith('sve')) {
-                        cartasValidas.push(c);
-                        return;
-                    }
-                    // Promos a partir de SVP-086 (Marca H+)
-                    if (id.startsWith('svp')) {
-                        const matchPromo = id.match(/svp[^\d]*(\d+)/);
-                        if (matchPromo && parseInt(matchPromo[1]) >= 86) cartasValidas.push(c);
-                        return;
-                    }
-                    // Coleções regulares (SV5 para cima)
-                    const matchSV = id.match(/^sv(\d+)/);
-                    if (matchSV) {
-                        if (parseInt(matchSV[1]) >= 5) cartasValidas.push(c);
-                        return;
-                    }
-                    // Bloqueia sub-sets G (como sv4pt5)
-                    if (id.includes('sv4pt5')) return;
+                if (pontos > 0) {
+                    comSinergia.push({ carta: c, score: pontos });
+                } else {
+                    // FILTRO DO FORMATO ATUAL (H, I, J)
+                    let formatoValido = false;
                     
-                    // Passa o resto (sets especiais novos da era SV)
-                    cartasValidas.push(c);
-                    return;
-                }
+                    if (id.startsWith('sve')) {
+                        formatoValido = true; 
+                    } else if (id.startsWith('svp')) {
+                        const matchPromo = id.match(/svp[^\d]*(\d+)/);
+                        if (matchPromo && parseInt(matchPromo[1]) >= 86) formatoValido = true;
+                    } else if (id.startsWith('sv')) {
+                        const matchSV = id.match(/^sv(\d+)/);
+                        if (matchSV && parseInt(matchSV[1]) >= 5) formatoValido = true; 
+                    }
 
-                // Prefixo desconhecido (Coleções futuras I e J), deixamos passar
-                cartasValidas.push(c);
+                    if (formatoValido) {
+                        semSinergia.push(c);
+                    }
+                }
             });
 
-            // 4. ORDENAÇÃO: Coloca as que têm mais sinergia no Topo absoluto e o restante em ordem alfabética
-cartasValidas.sort((a, b) => {
-    const idA = a.id ? a.id.toLowerCase() : '';
-    const nomeA = a.name ? a.name.toLowerCase().trim() : '';
-    const scoreA = (sinergia[idA] || 0) + (sinergia[nomeA] || 0);
+            // 4. Ordena por sinergia (ignorada se a lista estiver vazia)
+            comSinergia.sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return (a.carta.name || '').localeCompare(b.carta.name || '');
+            });
 
-    const idB = b.id ? b.id.toLowerCase() : '';
-    const nomeB = b.name ? b.name.toLowerCase().trim() : '';
-    const scoreB = (sinergia[idB] || 0) + (sinergia[nomeB] || 0);
+            // 5. Ordena alfabeticamente o formato atual
+            semSinergia.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
-    // Primeiro critério: quem tem mais pontos de sinergia vem antes
-    if (scoreB !== scoreA) {
-        return scoreB - scoreA;
-    }
-    
-    // Segundo critério (empate ou zero sinergia): ordem alfabética pelo nome da carta
-    return (a.name || '').localeCompare(b.name || '');
-});
+            // 6. Junta as duas listas (se comSinergia for vazia, só entra a semSinergia)
+            const listaFinal = [
+                ...comSinergia.map(item => item.carta),
+                ...semSinergia
+            ].slice(0, 400);
 
-            // 5. Cortamos em 400 cartas para mostrar muitas opções na tela
-            recomendacoes = cartasValidas.slice(0, 400).map(c => ({
+            // 7. Formata para o frontend protegendo aspas
+            recomendacoes = listaFinal.map(c => ({
                 id: c.id,
-                nome: c.name ? c.name.replace(/'/g, "\\'") : '',
+                nome: c.name ? c.name.replace(/'/g, "’").replace(/"/g, "") : '',
                 imagem: c.image + '/high.png'
             }));
         }

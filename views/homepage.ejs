@@ -6,25 +6,12 @@
     <title>Metagame - PokéBuilder</title>
     <link rel="stylesheet" href="/stylesheets/home.css">
 </head>
-<body class="home-page">
+<body class="home-page retro-bg">
     
-    <header class="header-hex">
-        <div class="header-logo-container-sm">
-            <div class="pokebola-sm"></div>
-            <h1 class="title-sm">PokéBuilder</h1>
-        </div>
-        <nav class="navbar-custom">
-            <a href="/home" class="nav-btn ativo-amarelo">Decks</a>
-            <a href="/seus-decks" class="nav-btn">Seus Decks</a>
-            <a href="/criar-deck" class="nav-btn">+ Novo Deck</a>
-            <a href="/logout" class="nav-btn">Sair</a>
-        </nav>
-    </header>
+    <%- include('partials/navbar') %>
 
     <main class="catalog">
-        <div style="display: flex; justify-content: center; margin-bottom: 24px; padding-top: 20px;">
-            <h2 class="titulo-minimalista" style="margin: 0; font-size: 28px;">Escolha um Pokémon</h2>
-        </div>
+        <h2 class="titulo-minimalista page-title">Escolha um Pokémon</h2>
 
         <div class="catalog-grid">
             <% if (typeof pokemons !== 'undefined' && pokemons.length > 0) { %>
@@ -40,8 +27,8 @@
                                 
                             </div>
                         </a>
-                        <div class="catalog-card__name" style="justify-content: center; padding: 16px;">
-                            <span style="font-weight: bold; font-size: 16px;"><%= pokemon.nome %></span>
+                        <div class="catalog-card__name">
+                            <span class="pokemon-name-frame"><%= pokemon.nome %></span>
                         </div>
                     </div>
                 <% }); %>
@@ -53,7 +40,7 @@
         </div>
     </main>
 
-    <footer class="home-footer" style="margin-top: auto;">
+    <footer class="home-footer retro-panel" style="margin-top: auto;">
         <div>© 2024 PokéBuilder</div>
         <div>Construa o seu time perfeito</div>
     </footer>

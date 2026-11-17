@@ -259,7 +259,7 @@ function renderizarGrade(cartas) {
         const div = document.createElement('div');
         div.className = 'card-result';
         div.innerHTML = `
-            <img src="${imgUrl}" alt="${carta.name}">
+            <img src="${imgUrl}" alt="${carta.name}" onclick="abrirZoomCarta(this.src)" style="cursor: pointer;">
             <div class="card-actions">
                 <button class="btn-add" onclick="adicionarCarta('${carta.id}', '${nomeSeguro}')">+ 1</button>
                 <button class="btn-add warning" onclick="adicionarVarias('${carta.id}', '${nomeSeguro}', 4)">+ 4</button>
@@ -278,7 +278,7 @@ function restaurarRecomendacoes() {
         const div = document.createElement('div');
         div.className = 'card-result';
         div.innerHTML = `
-            <img src="${carta.imagem}" alt="${carta.nome}">
+            <img src="${carta.imagem}" alt="${carta.nome}" onclick="abrirZoomCarta(this.src)" style="cursor: pointer;">
             <div class="card-actions">
                 <button class="btn-add" onclick="adicionarCarta('${carta.id}', '${nomeSeguro}')">+ 1</button>
                 <button class="btn-add warning" onclick="adicionarVarias('${carta.id}', '${nomeSeguro}', 4)">+ 4</button>
@@ -339,3 +339,16 @@ btnSalvar.addEventListener('click', async () => {
         btnSalvar.innerText = 'Salvar Deck';
     }
 });
+
+function abrirZoomCarta(imgUrl) {
+    const modal = document.getElementById('cartaZoomModal');
+    const imgZoom = document.getElementById('cartaZoomImg');
+    imgZoom.src = imgUrl.includes('/high.png') ? imgUrl : imgUrl + '/high.png';
+    modal.style.display = 'flex';
+}
+
+function fecharZoomCarta() {
+    const modal = document.getElementById('cartaZoomModal');
+    modal.style.display = 'none';
+    document.getElementById('cartaZoomImg').src = '';
+}

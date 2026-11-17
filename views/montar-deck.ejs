@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/stylesheets/home.css">
     <link rel="stylesheet" href="/stylesheets/montar-deck.css">
 </head>
-<body class="home-page">
+<body class="home-page retro-bg">
 
     <header class="header-hex">
         <div class="header-logo-container-sm">
@@ -24,7 +24,7 @@
 
     <main class="builder-layout">
         <!-- LADO ESQUERDO: Decklist -->
-        <section class="deck-panel">
+        <section class="deck-panel retro-panel">
             <input type="text" id="deckName" class="deck-name-input" placeholder="Nome do seu Deck..." autocomplete="off">
             
             <div class="form-check mb-3">
@@ -69,7 +69,7 @@
                         let nomeSeguro = carta.nome ? carta.nome.replace(/'/g, "\\'") : '';
                     %>
                         <div class="card-result">
-                            <img src="<%= carta.imagem %>" alt="<%= carta.nome %>">
+                            <img src="<%= carta.imagem %>" alt="<%= carta.nome %>" onclick="abrirZoomCarta(this.src)" style="cursor: pointer;">
                             <div class="card-actions">
                                 <button class="btn-add" onclick="adicionarCarta('<%= carta.id %>', '<%= nomeSeguro %>')">+ 1</button>
                                 <button class="btn-add warning" onclick="adicionarVarias('<%= carta.id %>', '<%= nomeSeguro %>', 4)">+ 4</button>
@@ -89,5 +89,9 @@
     <div id="deckEditandoData" data-deck="<%= typeof deckEditando !== "undefined" ? JSON.stringify(deckEditando) : "null" %>"></div>
 
     <script src="/javascripts/montar-deck.js"></script>
+    <!-- Modal de Zoom da Carta -->
+    <div id="cartaZoomModal" class="modal-zoom" onclick="fecharZoomCarta()">
+        <img id="cartaZoomImg" src="" alt="Zoom da Carta" onclick="event.stopPropagation()">
+    </div>
 </body>
 </html>
