@@ -437,7 +437,6 @@
     box-sizing: border-box;
     display: flex;
     width: 100%;
-    max-width: 200px;
     min-height: 62px;
     margin: 10px auto 4px;
     align-items: center;
