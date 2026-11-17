@@ -292,50 +292,78 @@ router.get('/montar-deck', async (req, res) => {
             });
         });
 
-        // 3. Busca a lista leve de TODAS as cartas na TCGdex de uma vez (1 única requisição rápida)
-        const resTodas = await fetch('https://api.tcgdex.net/v2/pt/cards');
+        // 3. Busca a lista leve de TODAS as cartas
+        const resTodas = await fetch('https://api.tcgdex.net/v2/en/cards');
         const todasCartas = await resTodas.json();
 
         if (Array.isArray(todasCartas)) {
-            // 4. Filtra apenas as do formato competitivo atual (para não trazer cartas velhas)
-            let cartasValidas = todasCartas.filter(c => {
-                if (!c.image) return false;
+            // Separa as cartas em duas listas
+            let cartasValidas = [];
+            let cartasAntigasNoBanco = []; 
+
+            todasCartas.forEach(c => {
+                if (!c.image) return;
+                
                 const id = c.id.toLowerCase();
+                const nome = c.name ? c.name.toLowerCase() : '';
                 
-                // Permite Promos, Energias e SV5 em diante (Marcação H+)
-                if (id.startsWith('svp') || id.startsWith('sve')) return true;
+                // Regra padrão de formato competitivo (sv5+ ou promo/energia básica)
+                let formatoValido = false;
+                if (id.startsWith('svp') || id.startsWith('sve')) formatoValido = true;
                 const matchSV = id.match(/^sv(\d+)/);
-                if (matchSV && parseInt(matchSV[1]) >= 5) return true;
-                
-                return false;
+                if (matchSV && parseInt(matchSV[1]) >= 5) formatoValido = true;
+
+                if (formatoValido) {
+                    cartasValidas.push(c); // Passa direto
+                } else if (sinergia[id] || sinergia[nome]) {
+                    // É antiga (ex: sv1, sv2), MAS os jogadores usam no deck. Fica em observação!
+                    cartasAntigasNoBanco.push(c);
+                }
             });
 
+            // 4. A "Exceção de Ouro" (Passe Livre apenas para Treinadores/Energias)
+            // Checa rapidamente a categoria apenas das cartas antigas em observação
+            const verificacoes = cartasAntigasNoBanco.map(async (c) => {
+                try {
+                    const resCarta = await fetch(`https://api.tcgdex.net/v2/en/cards/${c.id}`);
+                    if (resCarta.ok) {
+                        const dados = await resCarta.json();
+                        // Libera APENAS se for Trainer (Item, Supporter, Tool) ou Energia
+                        if (dados.category === 'Trainer' || dados.category === 'Energy') {
+                            return c; 
+                        }
+                    }
+                } catch(e) {}
+                return null; // Se for Pokémon (ou der erro), chumba.
+            });
+
+            // Espera as checagens terminarem e junta as cartas liberadas com as válidas
+            const antigasLiberadas = (await Promise.all(verificacoes)).filter(c => c !== null);
+            let todasAprovadas = [...cartasValidas, ...antigasLiberadas];
+
             // 5. ORDENAÇÃO DE SINERGIA: 
-            cartasValidas.sort((a, b) => {
-            const idA = a.id ? a.id.toLowerCase() : '';
-            const nomeA = a.name ? a.name.toLowerCase() : '';
-            // Pontua se bater com o ID OU com o Nome salvo no banco
-            const scoreA = (sinergia[idA] || 0) + (sinergia[nomeA] || 0);
+            todasAprovadas.sort((a, b) => {
+                const idA = a.id ? a.id.toLowerCase() : '';
+                const nomeA = a.name ? a.name.toLowerCase() : '';
+                const scoreA = (sinergia[idA] || 0) + (sinergia[nomeA] || 0);
 
-            const idB = b.id ? b.id.toLowerCase() : '';
-            const nomeB = b.name ? b.name.toLowerCase() : '';
-            const scoreB = (sinergia[idB] || 0) + (sinergia[nomeB] || 0);
+                const idB = b.id ? b.id.toLowerCase() : '';
+                const nomeB = b.name ? b.name.toLowerCase() : '';
+                const scoreB = (sinergia[idB] || 0) + (sinergia[nomeB] || 0);
 
-            // Maior pontuação (sinergia) vai para o topo
-            if (scoreB !== scoreA) {
-                return scoreB - scoreA; 
-            }
-            
-            // Desempate: Se as cartas tiverem a mesma pontuação (ex: 0), ordena por ordem alfabética
-            return a.name.localeCompare(b.name);
-        });
+                if (scoreB !== scoreA) {
+                    return scoreB - scoreA; 
+                }
+                return a.name.localeCompare(b.name);
+            });
 
-            // 6. Cortamos em 150 cartas para a página carregar rápido e não travar o browser
-            recomendacoes = cartasValidas.slice(0, 150).map(c => ({
+            // 6. Cortamos em 400 cartas para mostrar mais opções na tela
+            recomendacoes = todasAprovadas.slice(0, 400).map(c => ({
                 id: c.id,
-                nome: c.name,
+                nome: c.name ? c.name.replace(/'/g, "\\'") : '',
                 imagem: c.image + '/high.png'
             }));
+        
         }
     } catch (error) {
         console.error("Erro ao gerar recomendações:", error);
@@ -349,7 +377,7 @@ router.get('/montar-deck', async (req, res) => {
 });
 
 // ==========================================
-// SALVAR DECK (Passo Final)
+// SALVAR DECK (Com validação de 60 cartas e Autor Desconhecido)
 // ==========================================
 router.post('/salvar-deck', async (req, res) => {
     if (!req.session || !req.session.user) {
@@ -357,13 +385,25 @@ router.post('/salvar-deck', async (req, res) => {
     }
 
     try {
-        const { nome, pokemonsPrincipais, cartas } = req.body || {};
+        const { nome, pokemonsPrincipais, cartas, anonimo } = req.body || {};
         const nomeDeck = typeof nome === 'string' ? nome.trim() : '';
 
+        // 1. Validação básica
         if (!nomeDeck || !Array.isArray(cartas) || cartas.length === 0) {
             return res.status(400).json({ erro: 'O deck precisa de um nome e pelo menos uma carta.' });
         }
 
+        // 2. NOVA REGRA: Conta o total de cartas somando a quantidade de cada uma
+        const totalCartas = cartas.reduce((soma, carta) => soma + (Number(carta.quantidade) || 0), 0);
+        
+        // Exige exatamente 60 cartas (regra oficial do Pokémon TCG)
+        if (totalCartas !== 60) {
+            return res.status(400).json({ 
+                erro: `Um deck válido precisa de exatamente 60 cartas! O teu deck tem atualmente ${totalCartas}.` 
+            });
+        }
+
+        // 3. Validação individual das cartas (limite de 4 cópias, etc)
         if (cartas.some(carta =>
             !carta ||
             typeof carta.carta_id_api !== 'string' ||
@@ -375,9 +415,12 @@ router.post('/salvar-deck', async (req, res) => {
             return res.status(400).json({ erro: 'As cartas do deck são inválidas.' });
         }
 
+        // 4. AUTOR DESCONHECIDO: Se marcou a checkbox, salva como 'Desconhecido'
+        const autorDeck = anonimo === true ? 'Desconhecido' : req.session.user.username;
+
         const novoDeck = new Deck({
             nome: nomeDeck,
-            autor: req.session.user.username,
+            autor: autorDeck,
             pokemons_principais: Array.isArray(pokemonsPrincipais)
                 ? pokemonsPrincipais.filter(pokemon => typeof pokemon === 'string')
                 : [],
@@ -391,5 +434,39 @@ router.post('/salvar-deck', async (req, res) => {
         res.status(500).json({ erro: 'Erro interno ao salvar o deck.' });
     }
 });
+
+// ==========================================
+// DELETAR DECK (Apenas o Autor)
+// ==========================================
+router.post('/deletar-deck/:id', async (req, res) => {
+    // 1. Verifica se o utilizador tem sessão iniciada
+    if (!req.session || !req.session.user) {
+        return res.status(401).send('Utilizador não autenticado.');
+    }
+
+    try {
+        const deckId = req.params.id;
+        const deckDoBanco = await Deck.findById(deckId);
+
+        if (!deckDoBanco) {
+            return res.status(404).send('Deck não encontrado.');
+        }
+
+        // 2. SEGURANÇA: Verifica se o nome do utilizador logado é igual ao autor do deck
+        if (deckDoBanco.autor !== req.session.user.username) {
+            return res.status(403).send('Sem permissão: Apenas o criador original pode deletar este deck.');
+        }
+
+        // 3. Se passou na verificação de segurança, apaga do MongoDB
+        await Deck.findByIdAndDelete(deckId);
+        
+        // Redireciona de volta para a página dos decks do utilizador
+        res.redirect('/seus-decks');
+    } catch (erro) {
+        console.error('Erro ao deletar deck:', erro);
+        res.status(500).send('Erro interno ao deletar o deck.');
+    }
+});
+
 
 module.exports = router;

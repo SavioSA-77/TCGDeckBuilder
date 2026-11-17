@@ -15,8 +15,7 @@ const deckSchema = new mongoose.Schema({
       quantidade: { 
         type: Number, 
         required: true, 
-        min: 1, 
-        max: 4 
+        min: 1
       }
     }
   ]

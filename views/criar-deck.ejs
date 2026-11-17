@@ -107,7 +107,7 @@
 
         async function buscarNaAPI(termo) {
             try {
-                const res = await fetch(`https://api.tcgdex.net/v2/pt/cards?name=${encodeURIComponent(termo)}`);
+                const res = await fetch(`https://api.tcgdex.net/v2/en/cards?name=${encodeURIComponent(termo)}`);
                 const cartas = await res.json();
                 
                 if (Array.isArray(cartas)) {
