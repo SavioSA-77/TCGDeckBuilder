@@ -43,7 +43,15 @@
                         </a>
                         <div class="catalog-card__name" style="justify-content: space-between; padding: 12px 16px;">
                             <span style="font-weight: bold; font-size: 16px;"><%= deck.nome %></span>
-                            <a href="/editar-deck/<%= deck.id %>" class="nav-btn" style="padding: 5px 10px; font-size: 12px;">Editar</a>
+                            <a href="/editar-deck/<%= deck.id %>" class="btn btn-warning mt-2">
+                                <i class="bi bi-pencil"></i> Editar Deck
+                            </a>
+                            <!-- Botão de Deletar Seguro -->
+                            <form action="/deletar-deck/<%= deck.id %>" method="POST" style="display: inline;" onsubmit="return confirm('Tem certeza absoluta que deseja deletar este deck? Esta ação não pode ser desfeita.');">
+                                <button type="submit" class="btn btn-danger mt-2">
+                                    <i class="bi bi-trash"></i> Deletar Deck
+                                </button>
+                            </form>
                         </div>
                     </div>
                 <% }); %>

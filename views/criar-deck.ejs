@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Deck - PokéBuilder</title>
+    <link rel="stylesheet" href="/stylesheets/home.css">
+    <link rel="stylesheet" href="/stylesheets/criar-deck.css">
+</head>
+<body class="home-page">
+    
+    <header class="header-hex">
+        <div class="header-logo-container-sm">
+            <div class="pokebola-sm"></div>
+            <h1 class="title-sm">PokéBuilder</h1>
+        </div>
+        <nav class="navbar-custom">
+            <a href="/home" class="nav-btn">Decks</a>
+            <a href="/seus-decks" class="nav-btn">Seus Decks</a>
+            <a href="/criar-deck" class="nav-btn ativo-amarelo">+ Novo Deck</a>
+            <a href="/logout" class="nav-btn">Sair</a>
+        </nav>
+    </header>
+
+    <main class="catalog" style="padding-bottom: 120px;">
+        <div style="text-align: center; padding-top: 20px;">
+            <h2 class="titulo-minimalista" style="font-size: 28px; margin: 0;">Criação de Decks</h2>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="searchBar" class="search-bar" placeholder="Pesquise seu favorito..." autocomplete="off">
+        </div>
+
+        <div id="loading" class="loading">Buscando cartas na API...</div>
+
+        <!-- Grade onde as cartas aparecem em tempo real -->
+        <div class="catalog-grid" id="resultsGrid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px;">
+        </div>
+    </main>
+
+    <!-- Barra fixada na base para exibir o que foi selecionado -->
+    <div class="selection-bar">
+        <div>
+            <strong style="font-size: 14px;">Pokémons Principais Selecionados (1 a 3):</strong>
+            <div class="selected-cards" id="selectedCardsContainer">
+                <span style="font-size: 12px; color: #aaa; margin-top: 5px;">Nenhum Pokémon selecionado ainda.</span>
+            </div>
+        </div>
+        <!-- Ao submeter, os nomes escolhidos seguem para a próxima página de montagem -->
+        <form action="/montar-deck" method="GET" id="form-continuar">
+            <input type="hidden" name="pokemons" id="hiddenPokemons">
+            <button type="submit" class="btn-continuar" id="btnContinuar" disabled>Continuar Montagem</button>
+        </form>
+    </div>
+
+    <script src="/javascripts/criar-deck.js"></script>
+</body>
+</html>

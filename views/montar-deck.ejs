@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Montar Deck - PokéBuilder</title>
+    <link rel="stylesheet" href="/stylesheets/home.css">
+    <link rel="stylesheet" href="/stylesheets/montar-deck.css">
+</head>
+<body class="home-page">
+
+    <header class="header-hex">
+        <div class="header-logo-container-sm">
+            <div class="pokebola-sm"></div>
+            <h1 class="title-sm">PokéBuilder</h1>
+        </div>
+        <nav class="navbar-custom">
+            <a href="/home" class="nav-btn">Decks</a>
+            <a href="/seus-decks" class="nav-btn">Seus Decks</a>
+            <a href="/criar-deck" class="nav-btn ativo-amarelo">+ Novo Deck</a>
+            <a href="/logout" class="nav-btn">Sair</a>
+        </nav>
+    </header>
+
+    <main class="builder-layout">
+        <!-- LADO ESQUERDO: Decklist -->
+        <section class="deck-panel">
+            <input type="text" id="deckName" class="deck-name-input" placeholder="Nome do seu Deck..." autocomplete="off">
+            
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="checkAnonimo">
+                <label class="form-check-label text-white" for="checkAnonimo" style="font-size: 14px; cursor: pointer;">
+                    Postar como Anônimo
+                </label>
+            </div>
+
+            <div style="font-size: 13px; color: #ccc; margin-bottom: 15px;">
+                <strong>Principais:</strong> <%= pokemonsPrincipais.join(' • ') %>
+            </div>
+
+            <div class="deck-list" id="deckListContainer">
+                <!-- Cartas inseridas via JS -->
+            </div>
+
+            <div class="deck-summary">
+                Total: <span id="totalCards">0</span> / 60
+            </div>
+
+            <button class="btn-salvar" id="btnSalvar">Salvar Deck</button>
+        </section>
+
+        <!-- LADO DIREITO: Recomendações / Pesquisa -->
+        <section class="cards-panel">
+            <h2 class="section-title" id="panelTitle">
+                Recomendações do Meta
+                <span style="font-size: 14px; font-weight: normal; color: #666;">(Baseado nos seus Pokémons)</span>
+            </h2>
+            
+            <input type="text" id="searchBar" class="search-bar" placeholder="Pesquisar outras cartas (Pokémon, Treinador, Energia)..." autocomplete="off">
+            <div id="loading" class="loading">Procurando cartas...</div>
+            
+            <div class="cards-grid" id="cardsGrid">
+                <% if (recomendacoes.length === 0) { %>
+                    <p style="grid-column: 1/-1; text-align: center; color: #666; margin-top: 40px;">
+                        Nenhum dado suficiente ainda para recomendações. Comece a pesquisar acima!
+                    </p>
+                <% } else { %>
+                    <% recomendacoes.forEach(carta => { 
+                        let nomeSeguro = carta.nome ? carta.nome.replace(/'/g, "\\'") : '';
+                    %>
+                        <div class="card-result">
+                            <img src="<%= carta.imagem %>" alt="<%= carta.nome %>">
+                            <div class="card-actions">
+                                <button class="btn-add" onclick="adicionarCarta('<%= carta.id %>', '<%= nomeSeguro %>')">+ 1</button>
+                                <button class="btn-add warning" onclick="adicionarVarias('<%= carta.id %>', '<%= nomeSeguro %>', 4)">+ 4</button>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } %>
+            </div>
+        </section>
+    </main>
+
+    <!-- Passar as recomendações iniciais e dados de edição para o JS -->
+    <div id="initialRecommendations" data-recommendations="<%= JSON.stringify(recomendacoes) %>"></div>
+    <div id="dadosPrincipais" data-pokemons="<%= JSON.stringify(pokemonsPrincipais) %>"></div>
+    
+    <!-- NOVO: Injeta os dados do deck caso o utilizador esteja no modo de Edição -->
+    <div id="deckEditandoData" data-deck="<%= typeof deckEditando !== "undefined" ? JSON.stringify(deckEditando) : "null" %>"></div>
+
+    <script src="/javascripts/montar-deck.js"></script>
+</body>
+</html>
