@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const deckSchema = new mongoose.Schema({
   nome: { type: String, required: true },
   autor: { type: String, default: 'Anônimo' }, // Adicionado para combinar com a sua view
+  isAnonimo: { type: Boolean, default: false },
   pokemons_principais: { type: [String], default: [] }, 
   
   cartas: [
